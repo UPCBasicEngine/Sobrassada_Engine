@@ -86,9 +86,9 @@ GeometryBatch::~GeometryBatch()
     glDeleteBuffers(1, &indirect);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(2, models);
-    glDeleteBuffers(2, deltaWindDirections);
-    glDeleteBuffers(2, bones);
+    glDeleteBuffers(3, models);
+    glDeleteBuffers(3, deltaWindDirections);
+    glDeleteBuffers(3, bones);
     glDeleteBuffers(1, &bonesIndex);
     glDeleteBuffers(1, &materials);
 }
@@ -261,15 +261,16 @@ void GeometryBatch::LoadData()
 
 void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bool shadowMap)
 {
-    {
 #ifdef OPTICK
-        OPTICK_CATEGORY("GeometryBatch::WaitBuffer", Optick::Category::Wait)
+    OPTICK_PUSH("GeometryBatch::WaitBuffer")
 #endif
-        WaitBuffer();
-    }
+    WaitBuffer();
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("GeometryBatch::Render", Optick::Category::Rendering)
+    OPTICK_PUSH("GeometryBatch::Render")
 #endif
     std::vector<Command> commands;
     GenerateCommands(meshesToRender, commands);
@@ -281,13 +282,15 @@ void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bo
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, materials);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, materials);
     }
+#ifdef OPTICK
+    OPTICK_POP()
+#endif
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirect);
     glBufferData(GL_DRAW_INDIRECT_BUFFER, commands.size() * sizeof(Command), commands.data(), GL_DYNAMIC_DRAW);
 
     glBindVertexArray(vao);
 
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirect);
     glMultiDrawElementsIndirect(
         static_cast<GLenum>(mode), GL_UNSIGNED_INT, (GLvoid*)0, static_cast<GLsizei>(commands.size()), 0
     );
@@ -386,9 +389,9 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, bonesIndex);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 13, bonesIndex);
 
-        glUniform1i(4, 1); // mesh has bones
+        glUniform1i(7, 1); // mesh has bones
     }
-    else glUniform1i(4, 0); // meshes has no bones
+    else glUniform1i(7, 0); // meshes has no bones
 
     const GLuint nextBuffer    = models[nextBufferIndex];
     const GLuint currentBuffer = models[currentBufferIndex];

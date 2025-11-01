@@ -4,7 +4,7 @@ layout(location=0) in vec3 vertex_position;
 layout(location=4) in ivec4 vertex_joint;
 layout(location=5) in vec4 vertex_weights;
 
-layout(location=4) uniform bool hasBones;
+layout(location=7) uniform bool hasBones;
 
 layout(std140, row_major, binding = 0) uniform CameraMatrices
 {

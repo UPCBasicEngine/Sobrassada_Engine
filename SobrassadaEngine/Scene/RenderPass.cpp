@@ -40,6 +40,7 @@ RenderPass::RenderPass()
     opaqueMeshesToRender.reserve(1000);
     transparentMeshesToRender.reserve(200);
     vertexOffsetMeshesToRender.reserve(200);
+    spotToRender.reserve(TotalShadowMaps);
 
     glGenBuffers(2, depthReadPBO);
     for (int i = 0; i < 2; ++i)
@@ -259,6 +260,7 @@ void RenderPass::RenderScene(
     groupedDecals.clear();
     shadersToRender.clear();
     trailsToRender.clear();
+    spotToRender.clear();
 
     for (const auto& gameObject : objectsToRender)
     {
@@ -299,6 +301,10 @@ void RenderPass::RenderScene(
                 groupedDecals[uid].push_back(decal);
             }
         }
+
+        //Spot Lights
+        SpotLightComponent* spot = gameObject->GetComponent<SpotLightComponent*>();
+        if (spot && spot->GetRenderVolumetric()) spotToRender.push_back(spot);
     }
 
     if (videosToRender.size() != 0)
@@ -569,6 +575,11 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
 
 void RenderPass::DepthReduction(unsigned int depthTexture, int gBufferwidth, int gBufferheight)
 {
+    static struct
+    {
+        GLint inSize     = -1;
+        bool initialized = false;
+    } uniforms;
 
     if (lastReductionSize[0] != gBufferwidth && lastReductionSize[1] != gBufferheight)
     {
@@ -618,7 +629,12 @@ void RenderPass::DepthReduction(unsigned int depthTexture, int gBufferwidth, int
 
     unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
     glUseProgram(depthReductionProgram);
-    unsigned int inSizeLoc = glGetUniformLocation(depthReductionProgram, "inSize");
+
+    if (!uniforms.initialized)
+    {
+        uniforms.inSize      = glGetUniformLocation(depthReductionProgram, "inSize");
+        uniforms.initialized = true;
+    }
 
     for (size_t i = 0; i < reductionTextures.size(); ++i)
     {
@@ -628,7 +644,7 @@ void RenderPass::DepthReduction(unsigned int depthTexture, int gBufferwidth, int
 
         glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glBindTextureUnit(0, currentInput);
-        glUniform2i(inSizeLoc, currentWidth, currentHeight);
+        glUniform2i(uniforms.inSize, currentWidth, currentHeight);
 
         glDispatchCompute(groupsX, groupsY, 1);
         // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -740,10 +756,10 @@ void RenderPass::ShadowMapPassRender(
     shadowfrustum.pos                = sphereCenter + lightDir * sphereRadius;
     shadowfrustum.front              = lightDir;
     shadowfrustum.up                 = lightUp;
-    shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
-    shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
-    shadowfrustum.nearPlaneDistance  = 0.1f;
-    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
+    shadowfrustum.orthographicWidth  = sphereRadius * 2.3f;
+    shadowfrustum.orthographicHeight = sphereRadius * 2.3f;
+    shadowfrustum.nearPlaneDistance  = 0.001f;
+    shadowfrustum.farPlaneDistance   = sphereRadius * 2.3f;
 
     CameraMatrices lightmatrices;
     lightmatrices.viewMatrix       = shadowfrustum.ViewMatrix();
@@ -790,19 +806,18 @@ void RenderPass::ShadowMapPassRender(
     OPTICK_POP();
     OPTICK_PUSH("RenderPass::ShadowMap::Spotlights")
 #endif
-    auto& spotLights = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetSpotLights();
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
     std::vector<GameObject*> shadowObjectsToRenderSpot;
 
-    for (int i = 0; i < TotalShadowMaps && i < spotLights.size(); ++i)
+    for (int i = 0; i < TotalShadowMaps && i < spotToRender.size(); ++i)
     {
-        if (!spotLights[i] || (spotLights[i] && !spotLights[i]->GetRenderVolumetric())) continue;
+        if (!spotToRender[i] || (spotToRender[i] && !spotToRender[i]->GetRenderVolumetric())) continue;
 
         meshesToRender.clear();
         shadowObjectsToRenderSpot.clear();
 
-        lightFrustum.UpdateFrustumPlanes(spotLights[i]->GetViewMatrix(), spotLights[i]->GetProjectionMatrix());
+        lightFrustum.UpdateFrustumPlanes(spotToRender[i]->GetViewMatrix(), spotToRender[i]->GetProjectionMatrix());
         App->GetSceneModule()->GetScene()->CheckObjectsInFrustum_Cached(
             shadowObjectsToRenderSpot, lightFrustum, shadowObjectsToRender
         );
@@ -821,17 +836,17 @@ void RenderPass::ShadowMapPassRender(
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotShadowMaps[i], 0);
         glClear(GL_DEPTH_BUFFER_BIT);
 
-        lightmatrices.viewMatrix       = spotLights[i]->GetViewMatrix();
-        lightmatrices.projectionMatrix = spotLights[i]->GetProjectionMatrix();
+        lightmatrices.viewMatrix       = spotToRender[i]->GetViewMatrix();
+        lightmatrices.projectionMatrix = spotToRender[i]->GetProjectionMatrix();
 
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // LOADING SPOTLIGHT SHADOW TO SSBO
-        spotLights[i]->SetShadowGPUIndex(i);
+        spotToRender[i]->SetShadowGPUIndex(i);
         SpotlightShadow currentShadow;
-        currentShadow.viewProjection = spotLights[i]->GetViewProjection().Transposed();
+        currentShadow.viewProjection = spotToRender[i]->GetViewProjection().Transposed();
         currentShadow.shadowMap      = spotShadowMapsGPU[i];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
@@ -852,6 +867,19 @@ void RenderPass::ShadowMapPassRender(
 
 void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const
 {
+    static struct
+    {
+        GLint gPositions     = -1;
+        GLint gNormals       = -1;
+        GLint gDepth         = -1;
+        GLint noiseTexture   = -1;
+        GLint kernel_samples = -1;
+        GLint screenSize     = -1;
+        GLint bias           = -1;
+        GLint range          = -1;
+        GLuint cameraBlock   = GL_INVALID_INDEX;
+        bool initialized     = false;
+    } uniforms;
 
     ssao->Bind();
     const unsigned int program = App->GetShaderModule()->GetSsaoProgram();
@@ -861,27 +889,41 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
 
     glUseProgram(program);
 
+    if (!uniforms.initialized)
+    {
+        uniforms.gPositions     = glGetUniformLocation(program, "gPositions");
+        uniforms.gNormals       = glGetUniformLocation(program, "gNormals");
+        uniforms.gDepth         = glGetUniformLocation(program, "gDepth");
+        uniforms.noiseTexture   = glGetUniformLocation(program, "noiseTexture");
+        uniforms.kernel_samples = glGetUniformLocation(program, "kernel_samples");
+        uniforms.screenSize     = glGetUniformLocation(program, "screenSize");
+        uniforms.bias           = glGetUniformLocation(program, "bias");
+        uniforms.range          = glGetUniformLocation(program, "range");
+        uniforms.cameraBlock    = glGetUniformBlockIndex(program, "CameraMatrices");
+        uniforms.initialized    = true;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glUniform1i(glGetUniformLocation(program, "gPositions"), 0);
+    glUniform1i(uniforms.gPositions, 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "gNormals"), 1);
+    glUniform1i(uniforms.gNormals, 1);
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
-    glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
+    glUniform1i(uniforms.gDepth, 2);
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
-    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
+    glUniform1i(uniforms.noiseTexture, 3);
 
-    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
+    glUniform3fv(uniforms.kernel_samples, SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
 
-    glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
-    glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
-    glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
+    glUniform2f(uniforms.screenSize, (float)ssao->GetWidth(), (float)ssao->GetHeight());
+    glUniform1f(uniforms.bias, 0.025f);
+    glUniform1f(uniforms.range, 0.5f);
     unsigned int cameraUBO;
     if (camera == nullptr)
     {
@@ -892,11 +934,8 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
         cameraUBO = camera->GetUbo();
     }
 
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
+    glUniformBlockBinding(program, uniforms.cameraBlock, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -905,9 +944,23 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
 
 void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 {
+    static struct
+    {
+        GLint horizontal = -1;
+        GLint ssaoInput  = -1;
+        bool initialized = false;
+    } uniforms;
+
     const GLuint blurShader = App->GetShaderModule()->GetSsaoBlurProgram();
 
     glUseProgram(blurShader);
+
+    if (!uniforms.initialized)
+    {
+        uniforms.horizontal  = glGetUniformLocation(blurShader, "horizontal");
+        uniforms.ssaoInput   = glGetUniformLocation(blurShader, "ssaoInput");
+        uniforms.initialized = true;
+    }
 
     for (int i = 0; i < 2; ++i)
     {
@@ -917,11 +970,11 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
         bool horizontal = (i == 0);
 
-        glUniform1i(glGetUniformLocation(blurShader, "horizontal"), horizontal);
+        glUniform1i(uniforms.horizontal, horizontal);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, i == 0 ? ssao->GetSSAOTexture() : ssao->GetBlurTexture(0));
-        glUniform1i(glGetUniformLocation(blurShader, "ssaoInput"), 0);
+        glUniform1i(uniforms.ssaoInput, 0);
 
         App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
     }
@@ -995,14 +1048,25 @@ void RenderPass::BloomPassRender() const
     const unsigned int bloomProgram = App->GetShaderModule()->GetBloomProgram();
     glUseProgram(bloomProgram);
 
+    static struct
+    {
+        GLint bloomIntensity = -1;
+        bool initialized     = false;
+    } uniforms;
+
+    if (!uniforms.initialized)
+    {
+        uniforms.bloomIntensity = glGetUniformLocation(bloomProgram, "bloomIntensity");
+        uniforms.initialized    = true;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, framebuffer->GetColorTexture());
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, blurrTextures[!horizontal]);
 
-    GLint locIntensity = glGetUniformLocation(bloomProgram, "bloomIntensity");
-    glUniform1f(locIntensity, bloomIntensity);
+    glUniform1f(uniforms.bloomIntensity, bloomIntensity);
 
     glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
@@ -1241,12 +1305,23 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBlendFunc(GL_ONE, GL_ONE);
     glBlendEquation(GL_FUNC_ADD);
 
+    static struct
+    {
+        GLint u_Texture  = -1;
+        bool initialized = false;
+    } uniforms;
+
     unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
     glUseProgram(quadProgram);
 
-    unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
-    glUniform1i(loc, 0);
+    if (!uniforms.initialized)
+    {
+        uniforms.u_Texture   = glGetUniformLocation(quadProgram, "u_Texture");
+        uniforms.initialized = true;
+    }
+
+    glUniform1i(uniforms.u_Texture, 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, blurrTextures[!horizontal]);
@@ -1261,29 +1336,52 @@ void RenderPass::DecalsPassRender(CameraComponent* camera) const
 {
     if (groupedDecals.empty()) return;
 
+    static struct
+    {
+        GLint positionTex      = -1;
+        GLint normalTex        = -1;
+        GLint decalAlbedoTex   = -1;
+        GLint hasMetallic      = -1;
+        GLint decalMetallicTex = -1;
+        GLint hasNormal        = -1;
+        GLint decalNormalTex   = -1;
+        GLuint cameraBlock     = GL_INVALID_INDEX;
+        bool initialized       = false;
+    } uniforms;
+
     gbuffer->Bind();
 
     const unsigned int program = App->GetShaderModule()->GetDecalProgram();
 
     glUseProgram(program);
 
+    if (!uniforms.initialized)
+    {
+        uniforms.positionTex      = glGetUniformLocation(program, "positionTex");
+        uniforms.normalTex        = glGetUniformLocation(program, "normalTex");
+        uniforms.decalAlbedoTex   = glGetUniformLocation(program, "decalAlbedoTex");
+        uniforms.hasMetallic      = glGetUniformLocation(program, "hasMetallic");
+        uniforms.decalMetallicTex = glGetUniformLocation(program, "decalMetallicTex");
+        uniforms.hasNormal        = glGetUniformLocation(program, "hasNormal");
+        uniforms.decalNormalTex   = glGetUniformLocation(program, "decalNormalTex");
+        uniforms.cameraBlock      = glGetUniformBlockIndex(program, "CameraMatrices");
+        uniforms.initialized      = true;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
+    glUniform1i(uniforms.positionTex, 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+    glUniform1i(uniforms.normalTex, 1);
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
+    glUniformBlockBinding(program, uniforms.cameraBlock, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -1295,28 +1393,28 @@ void RenderPass::DecalsPassRender(CameraComponent* camera) const
     {
 
         const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
-        glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
+        glUniformHandleui64ARB(uniforms.decalAlbedoTex, dhandle);
 
         if (decals[0]->GetResourceMaterial()->GetMaterial().hasMetallic)
         {
-            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
+            glUniform1i(uniforms.hasMetallic, 1);
 
             const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().metallicTex;
-            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
+            glUniformHandleui64ARB(uniforms.decalMetallicTex, mhandle);
         }
         else if (decals[0]->GetResourceMaterial()->GetMaterial().hasSpecular)
         {
-            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
+            glUniform1i(uniforms.hasMetallic, 1);
 
             const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().specularTex;
-            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
+            glUniformHandleui64ARB(uniforms.decalMetallicTex, mhandle);
         }
-        else glUniform1i(glGetUniformLocation(program, "hasMetallic"), 0);
+        else glUniform1i(uniforms.hasMetallic, 0);
 
-        glUniform1i(glGetUniformLocation(program, "hasNormal"), decals[0]->GetResourceMaterial()->HasNormal() ? 1 : 0);
+        glUniform1i(uniforms.hasNormal, decals[0]->GetResourceMaterial()->HasNormal() ? 1 : 0);
 
         const uint64_t nhandle = decals[0]->GetResourceMaterial()->GetMaterial().normalTex;
-        glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);
+        glUniformHandleui64ARB(uniforms.decalNormalTex, nhandle);
 
         std::vector<DecalModels> models;
         models.reserve(decals.size());
@@ -1357,6 +1455,13 @@ void RenderPass::DecalsPassRender(CameraComponent* camera) const
 
 void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer)
 {
+    static struct
+    {
+        GLint screenSize   = -1;
+        GLuint cameraBlock = GL_INVALID_INDEX;
+        bool initialized   = false;
+    } uniforms;
+
     const int TILE_SIZE             = 16;
     const int MAX_LIGHTS_PER_TILE   = 250;
 
@@ -1370,7 +1475,14 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     unsigned int tileShadingProgram = App->GetShaderModule()->GetTileShadingProgram();
     glUseProgram(tileShadingProgram);
 
-    glUniform2i(glGetUniformLocation(tileShadingProgram, "screenSize"), width, height);
+    if (!uniforms.initialized)
+    {
+        uniforms.screenSize  = glGetUniformLocation(tileShadingProgram, "screenSize");
+        uniforms.cameraBlock = glGetUniformBlockIndex(tileShadingProgram, "CameraMatrices");
+        uniforms.initialized = true;
+    }
+
+    glUniform2i(uniforms.screenSize, width, height);
 
     glBindTextureUnit(0, gbuffer->GetDepthTexture());
 
@@ -1378,11 +1490,8 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(tileShadingProgram, "CameraMatrices");
-    glUniformBlockBinding(tileShadingProgram, blockIdx, 0);
+    glUniformBlockBinding(tileShadingProgram, uniforms.cameraBlock, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     if (visibleLightIndicesSSBO == 0 || totalSize != currentSize)
     {
@@ -1490,27 +1599,51 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glUseProgram(lightingPassProgram);
 
+    static struct
+    {
+        GLint viewLight      = -1;
+        GLint projLight      = -1;
+        GLint shadowTint     = -1;
+        GLint shadowStrength = -1;
+        GLint cameraPos      = -1;
+        GLint numTilesX      = -1;
+        GLint screenSize     = -1;
+        bool initialized     = false;
+    } uniforms;
+
+    if (!uniforms.initialized)
+    {
+        uniforms.viewLight      = glGetUniformLocation(lightingPassProgram, "viewLight");
+        uniforms.projLight      = glGetUniformLocation(lightingPassProgram, "projLight");
+        uniforms.shadowTint     = glGetUniformLocation(lightingPassProgram, "shadowTint");
+        uniforms.shadowStrength = glGetUniformLocation(lightingPassProgram, "shadowStrength");
+        uniforms.cameraPos      = glGetUniformLocation(lightingPassProgram, "cameraPos");
+        uniforms.numTilesX      = glGetUniformLocation(lightingPassProgram, "numTilesX");
+        uniforms.screenSize     = glGetUniformLocation(lightingPassProgram, "screenSize");
+        uniforms.initialized    = true;
+    }
+
     float3 cameraPos;
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
 
-    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightView.ptr());
-    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "projLight"), 1, GL_TRUE, lightProj.ptr());
+    glUniformMatrix4fv(uniforms.viewLight, 1, GL_TRUE, lightView.ptr());
+    glUniformMatrix4fv(uniforms.projLight, 1, GL_TRUE, lightProj.ptr());
 
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
     if (light != nullptr)
     {
         float3 shadowTint = light->GetShadowTint();
-        glUniform3f(glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+        glUniform3f(uniforms.shadowTint, shadowTint.x, shadowTint.y, shadowTint.z);
         float shadowStrength = light->GetShadowStrength();
-        glUniform1f(glGetUniformLocation(lightingPassProgram, "shadowStrength"), shadowStrength);
+        glUniform1f(uniforms.shadowStrength, shadowStrength);
     }
 
-    glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
+    glUniform3fv(uniforms.cameraPos, 1, &cameraPos[0]);
 
     // Light Culling
-    glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
-    glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
+    glUniform1i(uniforms.numTilesX, tilesX);
+    glUniform2i(uniforms.screenSize, width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
 
@@ -1527,6 +1660,22 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
 void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
+    static struct
+    {
+        GLint cameraPos   = -1;
+        GLint isWireframe = -1;
+        bool initialized  = false;
+    } tuniforms;
+
+    static struct
+    {
+        GLint cameraPos      = -1;
+        GLint isWireframe    = -1;
+        GLint windDirection  = -1;
+        GLint windParameters = -1;
+        bool initialized     = false;
+    } wtuniforms;
+
     Bind();
 
     glDepthMask(GL_FALSE);
@@ -1536,13 +1685,20 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 
     glUseProgram(program);
 
+    if (!tuniforms.initialized)
+    {
+        tuniforms.cameraPos   = glGetUniformLocation(program, "cameraPos");
+        tuniforms.isWireframe = glGetUniformLocation(program, "isWireframe");
+        tuniforms.initialized = true;
+    }
+
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
     float3 cameraPos;
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
 
-    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+    glUniform3fv(tuniforms.cameraPos, 1, &cameraPos[0]);
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
     {
@@ -1560,9 +1716,9 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             }
         }
 
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        glUniform1i(tuniforms.isWireframe, 0);
         batchManager->RenderTransparent(navmeshesToRender, program, camera);
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        glUniform1i(tuniforms.isWireframe, 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
         batchManager->RenderTransparent(nonnavmeshesToRender, program, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
@@ -1570,7 +1726,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 
     else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        glUniform1i(tuniforms.isWireframe, 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
         batchManager->RenderTransparent(transparentMeshesToRender, program, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
@@ -1578,26 +1734,32 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 
     else
     {
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        glUniform1i(tuniforms.isWireframe, 0);
 
         batchManager->RenderTransparent(transparentMeshesToRender, program, camera);
 
         glUseProgram(wPOProgram);
 
-        glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
-        glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+        if (!wtuniforms.initialized)
+        {
+            wtuniforms.cameraPos      = glGetUniformLocation(wPOProgram, "cameraPos");
+            wtuniforms.isWireframe    = glGetUniformLocation(wPOProgram, "isWireframe");
+            wtuniforms.windDirection  = glGetUniformLocation(wPOProgram, "windDirection");
+            wtuniforms.windParameters = glGetUniformLocation(wPOProgram, "windParameters");
+            wtuniforms.initialized    = true;
+        }
+
+        glUniform3fv(wtuniforms.cameraPos, 1, &cameraPos[0]);
+        glUniform1i(wtuniforms.isWireframe, 0);
 
         WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
         if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
         {
             const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+            glUniform4f(wtuniforms.windDirection, windDirection.x, windDirection.y, windDirection.z, windDirection.w);
             glUniform4f(
-                glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x, windDirection.y, windDirection.z,
-                windDirection.w
-            );
-            glUniform4f(
-                glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
-                windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()), windConfig->GetGustSpeed()
+                wtuniforms.windParameters, App->GetEngineTimer()->GetTime(), windConfig->GetWindSpeed(),
+                std::max(1.f, windConfig->GetGustFrequency()), windConfig->GetGustSpeed()
             );
         }
         batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
@@ -1608,18 +1770,33 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         glDisable(GL_CULL_FACE);
         glDepthMask(GL_FALSE);
 
+        static struct
+        {
+            GLuint cameraBlock = GL_INVALID_INDEX;
+            bool initialized   = false;
+        } trailUniforms;
+
         const unsigned int program = App->GetShaderModule()->GetTrailProgram();
         glUseProgram(program);
+
+        if (!trailUniforms.initialized)
+        {
+            trailUniforms.cameraBlock = glGetUniformBlockIndex(program, "CameraMatrices");
+            trailUniforms.initialized = true;
+        }
 
         unsigned int cameraUBO;
         if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
         else cameraUBO = camera->GetUbo();
 
-        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        /*glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
         unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
         glUniformBlockBinding(program, blockIdx, 0);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);*/
+
+        glUniformBlockBinding(program, trailUniforms.cameraBlock, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
 
         for (const auto& trail : trailsToRender)
             trail->Render(0, nullptr);

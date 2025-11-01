@@ -1164,8 +1164,7 @@ void Scene::CheckObjectsInFrustum_Cached(
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsInFrustum_Cached", Optick::Category::GameLogic)
 #endif
-    
-    // NO hacer octree query, solo check sobre candidatos
+
     for (auto gameObject : candidateObjects)
     {
         OBB objectOBB = gameObject->GetGlobalOBB();

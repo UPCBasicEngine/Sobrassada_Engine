@@ -16,6 +16,9 @@ in vec3 normal;
 in vec4 tangent;
 flat in int instance_index;
 
+uniform bool isWireframe;
+uniform bool isAlpha;
+
 struct Material
 {
     vec4 diffColor;
@@ -35,9 +38,6 @@ struct Material
     float emissiveIntensity;
     float padding;
 };
-
-uniform bool isWireframe;
-uniform bool isAlpha;
 
 readonly layout(std430, binding = 11) buffer Materials {
     Material materials[];

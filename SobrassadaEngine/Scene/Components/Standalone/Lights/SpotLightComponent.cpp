@@ -31,6 +31,8 @@ SpotLightComponent::SpotLightComponent(UID uid, GameObject* parent)
 
     const float outerRads          = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
     radius                         = range * tan(outerRads);
+
+    UpdateLocalAABB();
 }
 
 SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -75,13 +77,15 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
 
     const float outerRads          = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
     radius                         = range * tan(outerRads);
+
+    UpdateLocalAABB();
 }
 
 SpotLightComponent::~SpotLightComponent()
 {
     App->GetSceneModule()->GetScene()->GetLightsConfig()->RemoveSpotLight(this);
 
-    // delete camera;
+    UpdateLocalAABB();
 }
 
 void SpotLightComponent::Init()
@@ -158,9 +162,12 @@ void SpotLightComponent::RenderEditorInspector()
 
     ImGui::Text("Spot light parameters");
 
+    bool requireAABBUpdate = false;
+
     if (ImGui::SliderFloat("Range", &range, 0.0f, 200.0f))
     {
         spotCamera.farPlaneDistance = range;
+        requireAABBUpdate           = true;
     }
 
     if (ImGui::SliderFloat("Inner angle", &innerAngle, 0.0f, 90.0f))
@@ -173,6 +180,8 @@ void SpotLightComponent::RenderEditorInspector()
 
             const float outerRads    = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
             radius                   = range * tan(outerRads);
+
+            requireAABBUpdate        = true;
         }
     }
     if (ImGui::SliderFloat("Outer angle", &outerAngle, 0.0f, 90.0f))
@@ -184,12 +193,16 @@ void SpotLightComponent::RenderEditorInspector()
 
         const float outerRads    = outerAngle * (PI / 180.0f) > PI / 2 ? PI / 2 : outerAngle * (PI / 180.0f);
         radius                   = range * tan(outerRads);
+
+        requireAABBUpdate        = true;
     }
 
     ImGui::Text("Volumetrics parameters");
 
     ImGui::Checkbox("Render volumetrics", &renderVolumetrics);
     ImGui::DragFloat("Spot Anisotropy", &anisotropy, 0.01f, -0.99f, 0.99f);
+
+    if (requireAABBUpdate) UpdateLocalAABB();
 }
 
 void SpotLightComponent::RenderDebug(float deltaTime)
@@ -242,4 +255,21 @@ void SpotLightComponent::RenderDebug(float deltaTime)
 const float3 SpotLightComponent::GetDirection()
 {
     return (parent->GetGlobalTransform().RotatePart() * -float3::unitY).Normalized();
+}
+
+void SpotLightComponent::UpdateLocalAABB()
+{
+    float3 halfSize    = spotCamera.MinimalEnclosingAABB().HalfSize();
+
+    float3 offset       = parent->GetGlobalPostition() - spotCamera.pos;
+
+    AABB temp          = AABB(-halfSize + offset, offset + halfSize);
+
+    float3 forward = spotCamera.front.Normalized();
+    float3 centerOffset = forward * (range * 0.5f);
+    temp.Translate(centerOffset);
+
+    localComponentAABB = temp;
+
+    parent->OnAABBUpdated();
 }
