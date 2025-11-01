@@ -175,6 +175,27 @@ bool Archer::Init()
 void Archer::Update(float deltaTime)
 {
     if (agentAI == nullptr) return;
+    if (currentState == ArcherStates::DEATH)
+    {
+        if (agentAI)
+        {
+            agentAI->PauseMovement();
+            agentAI->SetSpeed(0.0f, 0.0f);
+        }
+        if (animComponent) animComponent->UseTrigger("die");
+
+         deathTimer += deltaTime;
+        if (deathTimer >= DEATH_DURATION)
+        {
+            parent->SetEnabled(false);
+            GLOG("DISAPPEARED");
+            
+        }
+        return;
+    }
+      
+
+
     if (currentState != ArcherStates::DEATH)
     {
         if (playerScript && (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN))
@@ -1034,6 +1055,7 @@ void Archer::HandleState(float deltaTime)
         if (deathTimer >= DEATH_DURATION)
         {
             parent->SetEnabled(false);
+            GLOG("DISAPPEARED");
             return;
         }
         break;
@@ -1443,7 +1465,7 @@ void Archer::Aim(float deltaTime)
     {
         agentAI->SetSpeed(0.0f, 0.0f);
 
-        agentAI->SetLookForward(false);
+        agentAI->SetLookForward(true);
         if (animComponent) animComponent->UseTrigger("aim");
         isAiming = true;
         aimTimer = 0.0f;
