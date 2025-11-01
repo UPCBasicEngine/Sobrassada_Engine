@@ -143,7 +143,7 @@ class SOBRASADA_API_ENGINE Scene
 
     void CheckObjectsToUpdate();
     void ClearObjectsToUpdate();
-    void CheckObjectsInFrustum(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes) const;
+    void CheckObjectsInFrustum(std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes, bool includeStatics = true) const;
     void CheckObjectsInFrustum_Cached(
         std::vector<GameObject*>& outOpaqueRenderGameObjects, FrustumPlanes frustumPlanes,
         const std::vector<GameObject*>& candidateObjects

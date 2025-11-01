@@ -261,7 +261,7 @@ void RenderPass::RenderScene(
     shadersToRender.clear();
     trailsToRender.clear();
     spotToRender.clear();
-    
+
     for (const auto& gameObject : objectsToRender)
     {
         // Meshes
@@ -302,7 +302,7 @@ void RenderPass::RenderScene(
             }
         }
 
-        //Spot Lights
+        // Spot Lights
         SpotLightComponent* spot = gameObject->GetComponent<SpotLightComponent*>();
         if (spot && spot->GetRenderVolumetric()) spotToRender.push_back(spot);
     }
@@ -788,6 +788,7 @@ void RenderPass::ShadowMapPassRender(
     lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
 
     std::vector<GameObject*> shadowObjectsToRender;
+
     App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
     for (const auto& gameObject : shadowObjectsToRender)
@@ -820,9 +821,29 @@ void RenderPass::ShadowMapPassRender(
         shadowObjectsToRenderSpot.clear();
 
         lightFrustum.UpdateFrustumPlanes(spotToRender[i]->GetViewMatrix(), spotToRender[i]->GetProjectionMatrix());
-        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum_Cached(
-            shadowObjectsToRenderSpot, lightFrustum, shadowObjectsToRender
-        );
+        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
+
+        if (spotToRender[i]->GetStaticObjects().empty())
+        {
+            std::vector<GameObject*> staticObjects;
+            App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(staticObjects, lightFrustum, true);
+
+            std::vector<GameObject*> filteredStatics;
+            for (auto* obj : staticObjects)
+            {
+                if (obj->IsStatic())
+                {
+                    MeshComponent* mesh = obj->GetComponent<MeshComponent*>();
+                    if (mesh && mesh->GetProduceShadows()) filteredStatics.push_back(obj);
+                }
+            }
+            spotToRender[i]->SetStaticObjects(filteredStatics);
+        }
+
+        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
+
+        const auto& staticObjs = spotToRender[i]->GetStaticObjects();
+        shadowObjectsToRenderSpot.insert(shadowObjectsToRenderSpot.end(), staticObjs.begin(), staticObjs.end());
 
         for (const auto& gameObject : shadowObjectsToRenderSpot)
         {
