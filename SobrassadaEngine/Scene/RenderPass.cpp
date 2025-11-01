@@ -261,7 +261,7 @@ void RenderPass::RenderScene(
     shadersToRender.clear();
     trailsToRender.clear();
     spotToRender.clear();
-
+    
     for (const auto& gameObject : objectsToRender)
     {
         // Meshes

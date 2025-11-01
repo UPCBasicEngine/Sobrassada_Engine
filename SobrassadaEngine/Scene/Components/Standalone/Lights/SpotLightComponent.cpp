@@ -154,6 +154,8 @@ void SpotLightComponent::ParentUpdated()
     spotCamera.front               = GetDirection();
     float3 tempVec                 = float3::unitX;
     spotCamera.up                  = -Cross(spotCamera.front, tempVec).Normalized();
+
+    UpdateLocalAABB();
 }
 
 void SpotLightComponent::RenderEditorInspector()

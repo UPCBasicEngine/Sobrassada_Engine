@@ -15,6 +15,7 @@ class DecalComponent;
 class VideoComponent;
 class TrailComponent;
 class ShaderScriptComponent;
+class SpotLightComponent;
 class GBuffer;
 class SSAO;
 class Framebuffer;
