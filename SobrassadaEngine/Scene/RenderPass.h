@@ -14,6 +14,7 @@ class DecalComponent;
 class VideoComponent;
 class TrailComponent;
 class ShaderScriptComponent;
+class SpotLightComponent;
 class GBuffer;
 class SSAO;
 class Framebuffer;
@@ -126,6 +127,7 @@ class RenderPass
     std::unordered_set<ShaderScriptComponent*> shadersToRender;
     std::unordered_map<UID, std::vector<DecalComponent*>> groupedDecals;
     std::vector<TrailComponent*> trailsToRender;
+    std::vector<SpotLightComponent*> spotToRender;
 
     std::vector<MeshComponent*> transparentMeshesToRender;
     std::vector<MeshComponent*> vertexOffsetMeshesToRender;
