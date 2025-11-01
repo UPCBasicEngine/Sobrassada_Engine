@@ -259,6 +259,10 @@
     <ClInclude Include="DissolveOpaque.h">
       <Filter>ShaderScripts</Filter>
     </ClInclude>
+    <ClInclude Include="BasicAnimationController.h" />
+    <ClInclude Include="Crow.h">
+      <Filter>Characters</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Libs\MathGeoLib\include\Time\Clock.cpp">
@@ -1049,6 +1053,10 @@
     </ClCompile>
     <ClCompile Include="DissolveOpaque.cpp">
       <Filter>ShaderScripts</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicAnimationController.cpp" />
+    <ClCompile Include="Crow.cpp">
+      <Filter>Characters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -39,6 +39,8 @@ namespace AK
         static const AkUniqueID PLAY_SFX_CAVE_02 = 3434634930U;
         static const AkUniqueID PLAY_SFX_CAVE_03 = 3434634931U;
         static const AkUniqueID PLAY_SFX_CAVE_04 = 3434634932U;
+        static const AkUniqueID PLAY_SFX_CROW_DOUBLECAW = 713213224U;
+        static const AkUniqueID PLAY_SFX_CROW_SINGLECAW = 3784777337U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEATTACK = 1369065983U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEDASH = 3072215751U;
         static const AkUniqueID PLAY_SFX_FERDIAD_AOEEXPANSION = 4190151190U;
@@ -100,8 +102,9 @@ namespace AK
         static const AkUniqueID PLAY_SFX_WATER_SPOUTS = 278128852U;
         static const AkUniqueID PLAY_SFX_WATERFALL_01 = 1233267134U;
         static const AkUniqueID PLAY_SFX_WATERFALL_02 = 1233267133U;
-        static const AkUniqueID PLAY_SFX_WIND_01 = 4018713014U;
         static const AkUniqueID PLAY_SFX_WIND_02 = 4018713013U;
+        static const AkUniqueID PLAY_SFX_WIND_BACKGROUND = 3649326455U;
+        static const AkUniqueID PLAY_SFX_WIND_HIGHLIGHT = 1323240997U;
         static const AkUniqueID PLAY_TORCH = 2025845440U;
         static const AkUniqueID SET_GAMESTATE_COMBAT = 2438311370U;
         static const AkUniqueID SET_GAMESTATE_EXPLORING = 1734839042U;
