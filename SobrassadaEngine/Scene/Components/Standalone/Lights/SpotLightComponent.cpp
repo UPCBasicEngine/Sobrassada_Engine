@@ -84,8 +84,6 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
 SpotLightComponent::~SpotLightComponent()
 {
     App->GetSceneModule()->GetScene()->GetLightsConfig()->RemoveSpotLight(this);
-
-    UpdateLocalAABB();
 }
 
 void SpotLightComponent::Init()
