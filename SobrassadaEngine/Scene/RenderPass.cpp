@@ -758,10 +758,10 @@ void RenderPass::ShadowMapPassRender(
     shadowfrustum.pos                = sphereCenter + lightDir * sphereRadius;
     shadowfrustum.front              = lightDir;
     shadowfrustum.up                 = lightUp;
-    shadowfrustum.orthographicWidth  = sphereRadius * 2.3f;
-    shadowfrustum.orthographicHeight = sphereRadius * 2.3f;
-    shadowfrustum.nearPlaneDistance  = 0.001f;
-    shadowfrustum.farPlaneDistance   = sphereRadius * 2.3f;
+    shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
+    shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
+    shadowfrustum.nearPlaneDistance  = 0.01f;
+    shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
 
     CameraMatrices lightmatrices;
     lightmatrices.viewMatrix       = shadowfrustum.ViewMatrix();
