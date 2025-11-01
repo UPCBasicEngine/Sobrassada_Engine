@@ -150,7 +150,7 @@ RenderPass::~RenderPass()
     glDeleteBuffers(2, depthReadPBO);
 
     glDeleteBuffers(1, &visibleLightIndicesSSBO);
-    glDeleteBuffers(2, depthReadPBO);
+    glDeleteBuffers(1, &spotShadowSSBO);
     // glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
 
     glDeleteBuffers(1, &decalVBO);
@@ -168,6 +168,12 @@ RenderPass::~RenderPass()
     {
         glMakeTextureHandleNonResidentARB(spotShadowMapsGPU[i]);
     }
+
+    for (unsigned int tex : reductionTextures)
+    {
+        glDeleteTextures(1, &tex);
+    }
+    reductionTextures.clear();
 
     glDeleteTextures(TotalShadowMaps, &spotShadowMaps[0]);
 
