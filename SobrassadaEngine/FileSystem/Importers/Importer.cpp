@@ -46,7 +46,7 @@ Resource* Importer::Load(UID uid)
         return FontImporter::LoadFont(uid);
 
     default:
-        GLOG("Unknown resource type: %d", type)
+        //GLOG("Unknown resource type: %d", type)
         return nullptr;
     }
 

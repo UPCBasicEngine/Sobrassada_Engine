@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Globals.h"
+#include "glew.h"
 #include "math/float2.h"
 #include "math/float4x4.h"
 
@@ -21,8 +22,9 @@ class Framebuffer;
 class CameraComponent;
 class DirectionalLightComponent;
 class ResourceTexture;
+class SpotLightComponent;
 
-constexpr int SpotLightShadowMapSize = 1024;
+constexpr int SpotLightShadowMapSize = 512;
 constexpr int TotalShadowMaps        = 15;
 
 struct SpotlightShadow
@@ -89,6 +91,7 @@ class RenderPass
 
     void GeometryPassRender(CameraComponent* camera) const;
     void NavMeshPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const;
+    void DepthReduction(unsigned int depthTexture, int gBufferwidth, int gBufferheight);
     void ShadowMapPassRender(
         CameraComponent* camera, DirectionalLightComponent* light, const std::vector<GameObject*>& objectsToRender
     );
@@ -147,10 +150,15 @@ class RenderPass
     float4x4 lightView;
     float4x4 lightProj;
 
-    unsigned int depthReadPBO                       = 0;
-    bool depthPBOInitialized                        = false;
-    float lastFrameMinDepth                         = 0.0f;
-    float lastFrameMaxDepth                         = 1.0f;
+    unsigned int depthReadPBO[2] = {0u, 0u};
+    int currentPBOIndex          = 0;
+    float lastFrameMinDepth      = 0.0f;
+    float lastFrameMaxDepth      = 1.0f;
+    GLsync depthFences[2]        = {0, 0};
+    std::vector<unsigned int> reductionTextures;
+    std::vector<float2> reductionSizes;
+    int lastReductionSize[2]                        = {0, 0};
+    float* mappedPBO[2]                             = {nullptr, nullptr};
 
     // SpotLight Shadows
     unsigned int spotShadowMaps[TotalShadowMaps]    = {0};

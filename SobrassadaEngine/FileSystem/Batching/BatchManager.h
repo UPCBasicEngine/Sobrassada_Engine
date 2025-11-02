@@ -1,10 +1,24 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
+#include "glew.h"
 
 class GeometryBatch;
 class MeshComponent;
 class CameraComponent;
+
+struct UniformCache
+{
+    GLint isWireframe    = -1;
+    GLint isAlpha        = -1;
+    GLint windParameters = -1;
+    GLint windUVParams   = -1;
+    GLint windAmplitudes = -1;
+    GLint windFrequency  = -1;
+    GLint cameraBlockIdx = -1;
+    bool initialized     = false;
+};
 
 class BatchManager
 {
@@ -30,4 +44,5 @@ class BatchManager
   private:
     std::vector<GeometryBatch*> opaqueBatches;
     std::vector<GeometryBatch*> transparentBatches;
+    std::unordered_map<GLuint, UniformCache> uniformCacheMap;
 };

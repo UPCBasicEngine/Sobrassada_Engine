@@ -389,7 +389,7 @@ void Scene::Save(
 update_status Scene::Update(float deltaTime)
 {
 #ifdef OPTICK
-    OPTICK_CATEGORY("Scene::Update", Optick::Category::GameLogic)
+    OPTICK_PUSH("Scene::UpdateOnlyOnce")
 #endif
     if (App->GetSceneModule()->GetOnlyOnceInPlayMode())
     {
@@ -404,6 +404,10 @@ update_status Scene::Update(float deltaTime)
         App->GetSceneModule()->ResetOnlyOnceInPlayMode();
     }
 
+#ifdef OPTICK
+    OPTICK_POP()
+    OPTICK_PUSH("Scene::UpdateComponents")
+#endif
     for (auto gameObject : toUpdateGameObjects)
         gameObject->UpdateComponents(deltaTime);
 
@@ -411,6 +415,9 @@ update_status Scene::Update(float deltaTime)
     if (window && !(window->Hidden || window->Collapsed)) sceneVisible = true;
     else sceneVisible = false;
 
+#ifdef OPTICK
+    OPTICK_POP()
+#endif
     return UPDATE_CONTINUE;
 }
 
@@ -1134,14 +1141,14 @@ void Scene::UpdateDynamicSpatialStructure()
     CreateDynamicSpatialDataStruct();
 }
 
-void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes) const
+void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes, bool includeStatics) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsInFrustum", Optick::Category::GameLogic)
 #endif
     std::vector<GameObject*> queriedObjects;
 
-    sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+    if (includeStatics) sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
     dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
@@ -1149,6 +1156,28 @@ void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects
     {
         OBB objectOBB = gameObject->GetGlobalOBB();
 
+        if (frustumPlanes.Intersects(objectOBB))
+        {
+            outRenderGameObjects.push_back(gameObject);
+        }
+    }
+}
+
+void Scene::CheckObjectsInFrustum_Cached(
+    std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes,
+    const std::vector<GameObject*>& candidateObjects
+) const
+{
+#ifdef OPTICK
+    OPTICK_CATEGORY("Scene::CheckObjectsInFrustum_Cached", Optick::Category::GameLogic)
+#endif
+
+    outRenderGameObjects.clear();
+    outRenderGameObjects.reserve(candidateObjects.size());
+
+    for (auto gameObject : candidateObjects)
+    {
+        OBB objectOBB = gameObject->GetGlobalOBB();
         if (frustumPlanes.Intersects(objectOBB))
         {
             outRenderGameObjects.push_back(gameObject);

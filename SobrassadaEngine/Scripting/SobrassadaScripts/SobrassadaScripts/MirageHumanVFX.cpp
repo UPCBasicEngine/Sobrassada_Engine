@@ -8,6 +8,8 @@
 #include "Components/Standalone/MeshComponent.h"
 #include "GBuffer.h"
 #include "GameObject.h"
+#include "GeometryBatch.h"
+#include "InputModule.h" // TODO: DELETE
 #include "LightsConfig.h"
 #include "Mesh.h"
 #include "OpenGLModule.h"
@@ -16,8 +18,6 @@
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ShaderModule.h"
-
-#include "InputModule.h" // TODO: DELETE
 
 #include "Math/float3.h"
 #include "glew.h"
@@ -73,6 +73,12 @@ bool MirageHumanVFX::Init()
             glEnableVertexAttribArray(3);
             glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
 
+            glEnableVertexAttribArray(4);
+            glVertexAttribIPointer(4, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, joint));
+
+            glEnableVertexAttribArray(5);
+            glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
+
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(
                 GL_ELEMENT_ARRAY_BUFFER, rmesh->GetIndices().size() * sizeof(unsigned int), rmesh->GetIndices().data(),
@@ -85,6 +91,7 @@ bool MirageHumanVFX::Init()
         }
 
         meshComp->SetEnabled(false);
+        meshComp->SetUpdateShaderStorage(true);
     }
     return true;
 }
@@ -122,13 +129,24 @@ void MirageHumanVFX::Render(float deltaTime, CameraComponent* cameraComp)
 
         glUniform3fv(3, 1, &colorTint[0]);
 
+        glUniform1i(9, meshComp->GetHasBones());
+        glUniform1ui(10, meshComp->GetBoneIndexOffset());
+
+        GeometryBatch* batch = meshComp->GetBatch();
+        if (batch) batch->BindBonesBuffer();
+
         glBindVertexArray(vao);
 
         if (isAdditive) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         else glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, -2.0f);
+
         AppEngine->GetOpenGLModule()->DrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        if (batch) batch->UnbindBonesBuffer();
         glBindVertexArray(0);
     }
 }

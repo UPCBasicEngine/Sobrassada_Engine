@@ -83,6 +83,8 @@ class CuChulainn : public Character
     void OnObjectDestroyed();
     void OnEnemyHit();
     void OnEnemyDefeated();
+    void ActivateArrowMark(float3 targetPos);
+    void SetArrowMark(float3 posArrow);
 
     void ActivateAbility(std::string abilityName);
     void OnArrowHit();
@@ -93,6 +95,7 @@ class CuChulainn : public Character
     void ApplySavedState(const PlayerState& playerState);
     bool ConsumeJustDied();
     bool IsGameOverCondition() const;
+    float3 GetMark() const;
     void AddRiastrad(int amount);
 
     void PlayHighlightSequence();
@@ -116,6 +119,7 @@ class CuChulainn : public Character
     bool CanChargeAttack() const;
     bool CanTransform() const;
     void GetInputs();
+   
 
     void LookAtMouse();
     void LookAtRightStick();
@@ -222,6 +226,14 @@ class CuChulainn : public Character
     float arrowHitVfxDuration                      = 0.2f;
     float arrowHitVfxTimer                         = 0.0f;
     bool arrowVfxIsActive                          = false;
+
+     // Arrow Mark VFX
+    GameObject* markVfxObject                      = nullptr;
+    std::string markVfxName                        = "ArrowMark";
+    float markVfxDuration                          = 0.5f;
+    float markVfxTimer                             = 0.0f;
+    bool markVfxIsActive                           = false;
+
 
     // Charged attack
     std::string chargedAttackName                  = "Charged";

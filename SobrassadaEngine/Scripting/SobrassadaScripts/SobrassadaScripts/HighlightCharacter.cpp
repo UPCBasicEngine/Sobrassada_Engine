@@ -27,7 +27,6 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
     fields.emplace_back("Character to highlight", InspectorField::FieldType::InputText, &characterToHighlightName);
     fields.emplace_back("Setup character on collision", InspectorField::FieldType::Bool, &setupTargetOnCollision);
     fields.emplace_back("Highlight focus", InspectorField::FieldType::InputText, &highlightFocusObjectName);
-    fields.emplace_back("Hide player", InspectorField::FieldType::Bool, &hidePlayerWhileZooming);
     fields.emplace_back("Use only zoom", InspectorField::FieldType::Bool, &useOnlyZoom);
 
     fields.emplace_back("Name display name", InspectorField::FieldType::InputText, &nameDisplayName);
@@ -146,11 +145,6 @@ void HighlightCharacter::Update(float deltaTime)
         isExecuting = false;
         splineMovementTarget->SetEnabled(false);
         cameraMovementScript->ResetToDefaultTargetAndLookAhead();
-        if (hidePlayerWhileZooming)
-        {
-            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(true);
-            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(true);
-        }
         playerController->SetInputDown(true);
     }
 }
@@ -200,12 +194,6 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         playerController->SetInputDown(false);
         if (player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>())
             player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>()->ResetState();
-
-        if (hidePlayerWhileZooming)
-        {
-            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("CH_MC_Chu_V02")->SetEnabled(false);
-            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("WP_Spear_Cu_Chu")->SetEnabled(false);
-        }
 
         const float3 highlightVector =
             (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())

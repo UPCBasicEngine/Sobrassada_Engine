@@ -10,6 +10,7 @@ shared float maxvalues[gl_WorkGroupSize.x * gl_WorkGroupSize.y];
 
 void main()
 {
+    uint localIndex = gl_LocalInvocationIndex;
     if(gl_GlobalInvocationID.x < inSize.x && gl_GlobalInvocationID.y < inSize.y) // work item inside work domain
     {
         ivec2 inCoord = ivec2(gl_GlobalInvocationID.xy);
@@ -23,22 +24,23 @@ void main()
     }
 
     // Synchronization
-    memoryBarrierShared();
     barrier();
 
-
-    if(gl_LocalInvocationIndex == 0)
+    for(uint stride = gl_WorkGroupSize.x * gl_WorkGroupSize.y / 2; stride > 0; stride >>= 1)
     {
-        float minValue = 1.0;
-        float maxValue = 0.0;
-
-        for(int i = 0; i< int(gl_WorkGroupSize.x * gl_WorkGroupSize.y); ++i) {
-            minValue = min(minValue, minvalues[i]);
-            if (maxvalues[i] < 1.0) {
-                maxValue = max(maxValue, maxvalues[i]);
+        if(localIndex < stride)
+        {
+            minvalues[localIndex] = min(minvalues[localIndex], minvalues[localIndex + stride]);
+            
+            if (maxvalues[localIndex + stride] < 1.0) {
+                maxvalues[localIndex] = max(maxvalues[localIndex], maxvalues[localIndex + stride]);
             }
         }
+        barrier();
+    }
 
-        imageStore(outImage, ivec2(gl_WorkGroupID.xy), vec4(minValue, maxValue, 0.0, 0.0));
+    if(localIndex == 0)
+    {
+        imageStore(outImage, ivec2(gl_WorkGroupID.xy), vec4(minvalues[0], maxvalues[0], 0.0, 0.0));
     }
 }
