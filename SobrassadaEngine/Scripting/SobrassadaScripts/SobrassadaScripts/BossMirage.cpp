@@ -98,6 +98,11 @@ void BossMirage::Update(float deltaTime)
     {
         timeSinceLastActivation += deltaTime;
 
+        if (sequence == &sequence2 && currentWeightOrder >= 4 && currentWeightOrder < 15)
+        {
+            sequence->delayBetweenZones = 2.0f;
+        }
+
         if (sequence == &sequence3)
         {
             sequence->delayBetweenZones = 2.0f;
