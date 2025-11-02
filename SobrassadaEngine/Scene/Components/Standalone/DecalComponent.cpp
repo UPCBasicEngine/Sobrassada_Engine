@@ -110,7 +110,6 @@ void DecalComponent::AddMaterial(UID resource)
 
 void DecalComponent::ParentUpdated()
 {
-    RecalculateAABB();
 }
 
 void DecalComponent::RecalculateAABB()

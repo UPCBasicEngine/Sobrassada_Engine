@@ -4,6 +4,7 @@
 
 #include "Geometry/Frustum.h"
 #include "Math/float4x4.h"
+#include <vector>
 
 #include "rapidjson/document.h"
 
@@ -40,6 +41,12 @@ class SpotLightComponent : public LightComponent
 
     void SetShadowGPUIndex(int newIndex) { shadowGPUIndex = newIndex; }
 
+    const std::vector<GameObject*>& GetStaticObjects() const { return staticObjects; }
+    void SetStaticObjects(const std::vector<GameObject*>& objects) { staticObjects = objects; }
+
+  private:
+    void UpdateLocalAABB();
+
   private:
     float range;
     float innerAngle;
@@ -50,4 +57,6 @@ class SpotLightComponent : public LightComponent
 
     int shadowGPUIndex     = -1;
     Frustum spotCamera;
+
+    std::vector<GameObject*> staticObjects;
 };

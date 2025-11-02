@@ -547,8 +547,8 @@ void AnimationComponent::UpdateBoneHierarchy(GameObject* bone)
 {
     if (!bone) return;
 
-    // global transform is updated
-    bone->OnTransformUpdated();
+    // global transform is updated (We only need to update the global transform)
+    bone->UpdateBonesTransform();
 
     // Debug output to see what's happening
     // GLOG("Updated bone %s global transform", bone->GetName().c_str());

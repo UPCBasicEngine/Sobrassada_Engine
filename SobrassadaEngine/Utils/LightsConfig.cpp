@@ -195,7 +195,6 @@ unsigned int LightsConfig::CubeMapToTexture(int width, int height)
         App->GetShaderModule()->CreateShaderProgram(SKYBOX_VERTEX_SHADER_PATH, IRRADIANCE_FRAGMENT_SHADER_PATH);
     glUseProgram(irradianceProgram);
 
-    // TODO: Create and Bind Frame Buffer and Create Irradiance Cubemap
     unsigned int frameBuffer;
     glGenFramebuffers(1, &frameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
@@ -305,7 +304,6 @@ unsigned int LightsConfig::PreFilteredEnvironmentMapGeneration(int width, int he
         // Render each cube plane
         for (unsigned int i = 0; i < 6; ++i)
         {
-
             glFramebufferTexture2D(
                 GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilteredtexture, mip
             );

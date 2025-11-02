@@ -62,7 +62,6 @@ Character::Character(
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 25.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 30.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
-        fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
         if (type == CharacterType::Boss || type == CharacterType::Soldier)
             fields.push_back({"Mesh 2 name", InspectorField::FieldType::InputText, &mesh2Name});
         if (type == CharacterType::Boss)

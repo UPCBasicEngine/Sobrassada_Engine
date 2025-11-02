@@ -88,6 +88,9 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     OPTICK_CATEGORY("BatchManager::Render", Optick::Category::Rendering)
 #endif
 
+#ifdef OPTICK
+    OPTICK_PUSH("BatchManager::meshesToRender")
+#endif
     if (meshesToRender.empty()) return;
 
     std::unordered_map<GeometryBatch*, std::vector<MeshComponent*>> grouped;
@@ -111,13 +114,19 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    uint64_t totalTriangles = 0;
-    uint64_t totalVertices  = 0;
+    uint64_t totalTriangles  = 0;
+    uint64_t totalVertices   = 0;
 
-    const auto passStart    = std::chrono::high_resolution_clock::now();
+    const auto passStart     = std::chrono::high_resolution_clock::now();
+
+    unsigned int lastProgram = -1;
 
     for (GeometryBatch* batch : opaqueBatches)
     {
+#ifdef OPTICK
+        OPTICK_POP();
+        OPTICK_PUSH("BatchManager::opaqueMeshes")
+#endif
         auto it = grouped.find(batch);
         if (it == grouped.end()) continue;
 
@@ -137,45 +146,58 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
                                            : App->GetShaderModule()->GetMetallicGeometryPassProgram();
         }
 
-        glUseProgram(program);
+        UniformCache& u = uniformCacheMap[program];
+        if (lastProgram != program)
+        {
+            glUseProgram(program);
 
-        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-        unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-        glUniformBlockBinding(program, blockIdx, 0);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            if (!u.initialized)
+            {
+                u.isWireframe    = glGetUniformLocation(program, "isWireframe");
+                u.isAlpha        = glGetUniformLocation(program, "isAlpha");
+                u.windParameters = glGetUniformLocation(program, "windParameters");
+                u.windUVParams   = glGetUniformLocation(program, "windUVParameters");
+                u.windAmplitudes = glGetUniformLocation(program, "windAmplitudes");
+                u.windFrequency  = glGetUniformLocation(program, "windFrequency");
+                u.cameraBlockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
+                if (u.cameraBlockIdx != -1) glUniformBlockBinding(program, u.cameraBlockIdx, 0);
+                u.initialized = true;
+            }
 
-        if (isWireframe) glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
-        else glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
+            lastProgram = program;
+        }
 
-        if (batch->IsAlpha()) glUniform1i(glGetUniformLocation(program, "isAlpha"), 1);
-        else glUniform1i(glGetUniformLocation(program, "isAlpha"), 0);
+        if (isWireframe) glUniform1i(u.isWireframe, 1);
+        else glUniform1i(u.isWireframe, 0);
+
+        if (batch->IsAlpha()) glUniform1i(u.isAlpha, 1);
+        else glUniform1i(u.isAlpha, 0);
 
         if (batch->IsDoubleSided()) glDisable(GL_CULL_FACE);
 
         if (batch->DoApplyWind())
         {
-            if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
-                windConfig->GetApplyWindGlobally())
-            {
-                glUniform4f(
-                    glGetUniformLocation(program, "windParameters"), App->GetEngineTimer()->GetTime(),
-                    windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()),
-                    windConfig->GetGustSpeed()
-                );
-                glUniform4f(
-                    glGetUniformLocation(program, "windUVParameters"), batch->GetVCoord0(), batch->GetVCoord1(),
-                    batch->UseCentralPivot(), batch->UseWindGravity()
-                );
-                glUniform4f(
-                    glGetUniformLocation(program, "windAmplitudes"), batch->GetWindXAmplitude(),
-                    batch->GetWindYAmplitude(), batch->GetWindZAmplitude(), batch->UseConstantMovement()
-                );
-                glUniform4f(
-                    glGetUniformLocation(program, "windFrequency"), batch->GetWindXFrequency(),
-                    batch->GetWindYFrequency(), batch->GetWindZFrequency(), batch->GetWindTimeScale()
-                );
-            }
+                if (const WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
+                    windConfig->GetApplyWindGlobally())
+                {
+                    glUniform4f(
+                        u.windParameters, App->GetEngineTimer()->GetTime(), windConfig->GetWindSpeed(),
+                        std::max(1.f, windConfig->GetGustFrequency()), windConfig->GetGustSpeed()
+                    );
+                    glUniform4f(
+                        u.windUVParams, batch->GetVCoord0(), batch->GetVCoord1(), batch->UseCentralPivot(),
+                        batch->UseWindGravity()
+                    );
+                    glUniform4f(
+                        u.windAmplitudes, batch->GetWindXAmplitude(), batch->GetWindYAmplitude(),
+                        batch->GetWindZAmplitude(), batch->UseConstantMovement()
+                    );
+                    glUniform4f(
+                        u.windFrequency, batch->GetWindXFrequency(), batch->GetWindYFrequency(),
+                        batch->GetWindZFrequency(), batch->GetWindTimeScale()
+                    );
+                }
         }
 
         batch->ResetUpdatedOnce();
@@ -186,6 +208,10 @@ void BatchManager::Render(const std::vector<MeshComponent*>& meshesToRender, Cam
         totalVertices                  += vertexCount;
 
         totalTriangles                 += (vertexCount / 3);
+
+#ifdef OPTICK
+        OPTICK_POP();
+#endif
     }
 
     const auto passEnd                         = std::chrono::high_resolution_clock::now();
