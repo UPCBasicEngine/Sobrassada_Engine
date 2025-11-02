@@ -54,7 +54,6 @@ Character::Character(
     fields.push_back({"Attack Hitbox Duration", InspectorField::FieldType::Float, &attackHitboxDuration, 0.0f, 5.0f});
 
     fields.push_back({"Heal Cooldown", InspectorField::FieldType::Float, &healCooldown, 0.0f, 5.0f});
-    fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
     {
