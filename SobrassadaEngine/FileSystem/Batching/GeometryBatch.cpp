@@ -53,20 +53,23 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
-    glGenBuffers(2, models);
-    glGenBuffers(2, deltaWindDirections);
+    glGenBuffers(3, models);
+    glGenBuffers(3, deltaWindDirections);
     if (hasBones)
     {
-        glGenBuffers(2, bones);
+        glGenBuffers(3, bones);
         glGenBuffers(1, &bonesIndex);
     }
     glGenBuffers(1, &materials);
     gSync[0]     = nullptr;
     gSync[1]     = nullptr;
+    gSync[2]     = nullptr;
     ptrModels[0] = nullptr;
     ptrModels[1] = nullptr;
+    ptrModels[2] = nullptr;
     ptrBones[0]  = nullptr;
     ptrBones[1]  = nullptr;
+    ptrBones[2]  = nullptr;
 }
 
 GeometryBatch::~GeometryBatch()
@@ -83,16 +86,16 @@ GeometryBatch::~GeometryBatch()
     glDeleteBuffers(1, &indirect);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(2, models);
-    glDeleteBuffers(2, deltaWindDirections);
-    glDeleteBuffers(2, bones);
+    glDeleteBuffers(3, models);
+    glDeleteBuffers(3, deltaWindDirections);
+    glDeleteBuffers(3, bones);
     glDeleteBuffers(1, &bonesIndex);
     glDeleteBuffers(1, &materials);
 }
 
 void GeometryBatch::CleanUp()
 {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         if (gSync[i])
         {
@@ -198,8 +201,8 @@ void GeometryBatch::LoadData()
     modelsSize              = totalModels.size() * sizeof(float4x4);
     deltaWindDirectionsSize = totalModels.size() * sizeof(float4);
 
-    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
-    for (int i = 0; i < 2; i++)
+    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+    for (int i = 0; i < 3; i++)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
 
@@ -244,7 +247,10 @@ void GeometryBatch::LoadData()
 
         for (size_t j = 0; j < accBonesCount; ++j)
             ptrBones[i][j] = float4x4::identity;
+    }
 
+    if (hasBones)
+    {
         bonesIndexSize = bonesCount.size() * sizeof(unsigned int);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, bonesIndex);
         glBufferData(GL_SHADER_STORAGE_BUFFER, bonesIndexSize, bonesCount.data(), GL_STATIC_DRAW);
@@ -254,19 +260,22 @@ void GeometryBatch::LoadData()
     glBufferData(
         GL_SHADER_STORAGE_BUFFER, totalMaterials.size() * sizeof(MaterialGPU), totalMaterials.data(), GL_STATIC_DRAW
     );
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bool shadowMap)
 {
-    {
 #ifdef OPTICK
-        OPTICK_CATEGORY("GeometryBatch::WaitBuffer", Optick::Category::Wait)
+    OPTICK_PUSH("GeometryBatch::WaitBuffer")
 #endif
-        WaitBuffer();
-    }
+    WaitBuffer();
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("GeometryBatch::Render", Optick::Category::Rendering)
+    OPTICK_PUSH("GeometryBatch::Render")
 #endif
     std::vector<Command> commands;
     GenerateCommands(meshesToRender, commands);
@@ -278,13 +287,15 @@ void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bo
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, materials);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, materials);
     }
+#ifdef OPTICK
+    OPTICK_POP()
+#endif
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirect);
     glBufferData(GL_DRAW_INDIRECT_BUFFER, commands.size() * sizeof(Command), commands.data(), GL_DYNAMIC_DRAW);
 
     glBindVertexArray(vao);
 
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, indirect);
     glMultiDrawElementsIndirect(
         static_cast<GLenum>(mode), GL_UNSIGNED_INT, (GLvoid*)0, static_cast<GLsizei>(commands.size()), 0
     );
@@ -335,10 +346,26 @@ void GeometryBatch::WaitBuffer()
 {
     if (gSync[currentBufferIndex])
     {
-        while (1)
+        GLenum result = glClientWaitSync(gSync[currentBufferIndex], 0, 0);
+        if (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED)
         {
-            GLenum waitReturn = glClientWaitSync(gSync[currentBufferIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1);
-            if (waitReturn == GL_ALREADY_SIGNALED || waitReturn == GL_CONDITION_SATISFIED) return;
+            glDeleteSync(gSync[currentBufferIndex]);
+            gSync[currentBufferIndex] = nullptr;
+        }
+        else if (result == GL_TIMEOUT_EXPIRED)
+        {
+            result = glClientWaitSync(gSync[currentBufferIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000); // 1 segundo
+            
+            if (result == GL_TIMEOUT_EXPIRED)
+            {
+                glDeleteSync(gSync[currentBufferIndex]);
+                gSync[currentBufferIndex] = nullptr;
+            }
+            else
+            {
+                glDeleteSync(gSync[currentBufferIndex]);
+                gSync[currentBufferIndex] = nullptr;
+            }
         }
     }
 }
@@ -346,7 +373,7 @@ void GeometryBatch::WaitBuffer()
 void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender)
 {
     updatedOnce               = true;
-    const int nextBufferIndex = (currentBufferIndex + 1) % 2;
+    const int nextBufferIndex = (currentBufferIndex + 1) % 3;
 
     if (hasBones)
     {
@@ -370,7 +397,6 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
             component->SetBaseIndex((unsigned int)index);
             component->SetBoneIndexOffset((unsigned int)accBones);
         }
-        glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 12, currentBuffer, 0, bonesSize);
@@ -378,9 +404,9 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, bonesIndex);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 13, bonesIndex);
 
-        glUniform1i(4, 1); // mesh has bones
+        glUniform1i(7, 1); // mesh has bones
     }
-    else glUniform1i(4, 0); // meshes has no bones
+    else glUniform1i(7, 0); // meshes has no bones
 
     const GLuint nextBuffer    = models[nextBufferIndex];
     const GLuint currentBuffer = models[currentBufferIndex];
@@ -392,7 +418,6 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         const std::size_t index           = componentsMap[component];
         ptrModels[nextBufferIndex][index] = component->GetCombinedMatrix();
     }
-    glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentBuffer);
     glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 10, currentBuffer, 0, modelsSize);
@@ -413,7 +438,6 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
             ptrDeltaWindDirections[nextBufferIndex][index] =
                 float4(deltaWindDirection.x, deltaWindDirection.y, deltaWindDirection.z, deltaWindDirection.w);
         }
-        glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);
@@ -422,7 +446,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
 
 void GeometryBatch::SwapBuffers()
 {
-    currentBufferIndex = (currentBufferIndex + 1) % 2;
+    currentBufferIndex = (currentBufferIndex + 1) % 3;
 }
 
 void GeometryBatch::BindBonesBuffer()

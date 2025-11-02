@@ -84,8 +84,6 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
 SpotLightComponent::~SpotLightComponent()
 {
     App->GetSceneModule()->GetScene()->GetLightsConfig()->RemoveSpotLight(this);
-
-    // delete camera;
 }
 
 void SpotLightComponent::Init()
@@ -266,6 +264,10 @@ void SpotLightComponent::UpdateLocalAABB()
     float3 offset       = parent->GetGlobalPostition() - spotCamera.pos;
 
     AABB temp          = AABB(-halfSize + offset, offset + halfSize);
+
+    float3 forward = spotCamera.front.Normalized();
+    float3 centerOffset = forward * (range * 0.5f);
+    temp.Translate(centerOffset);
 
     localComponentAABB = temp;
 

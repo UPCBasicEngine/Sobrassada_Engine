@@ -16,6 +16,7 @@
 #include "PhysicsModule.h"
 #include "ShaderScriptComponent.h"
 #include <debug_draw.hpp>
+#include <optick.h>
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
@@ -203,6 +204,10 @@ void ScriptComponent::Clone(const Component* other)
 void ScriptComponent::Update(float deltaTime)
 {
     if (!IsEffectivelyEnabled()) return;
+#ifdef OPTICK
+    std::string optickName = "ScriptUpdate: " + parent->GetName();
+    OPTICK_EVENT_DYNAMIC(optickName.c_str());
+#endif
 
     if (App->GetSceneModule()->GetInPlayMode())
     {
@@ -217,6 +222,10 @@ void ScriptComponent::Update(float deltaTime)
                     scriptInitialized[i] = true;
                 }
 
+#ifdef OPTICK
+                std::string optickName = "ScriptUpdate: " + std::to_string(i);
+                OPTICK_EVENT_DYNAMIC(optickName.c_str());
+#endif
                 scriptInstances[i]->Update(gameTime);
             }
         }
