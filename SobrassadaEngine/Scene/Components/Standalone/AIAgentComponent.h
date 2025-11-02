@@ -47,6 +47,7 @@ class SOBRASADA_API_ENGINE AIAgentComponent : public Component
     void ResetAngularSpeed();
     void MoveTo(float distance, float3 rotateDirection);
     void SetFreeMove(bool freeMove) { freeMovement = freeMove; }
+    bool RaycastNavmesh(const float3& start, const float3& end, float& hitT) const;
 
   private:
     float defaultSpeed           = 0.0f;
