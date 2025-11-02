@@ -710,6 +710,14 @@ bool CuChulainn::Init()
     std::string currentScenename = AppEngine->GetSceneModule()->GetScene()->GetSceneName();
     if (currentScenename == "SCENE_Tutorial" && animComponent)
     {
+        GameObject* focusPoint = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("PlayerFocusPoint");
+        if (focusPoint == nullptr) focusPoint = parent;
+        Quat cameraOrientation = Quat(
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart()
+        );
+        const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
+        cameraObject->SetLocalPosition(focusPoint->GetGlobalTransform().TranslatePart() + 30 * zoomVector - parent->GetParentGlobalTransform().TranslatePart()); 
+        
         animComponent->UseTrigger("Respawn");
         controlsLocked = true;
         character->EnableMovement(false);
