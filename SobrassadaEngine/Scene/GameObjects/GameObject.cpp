@@ -1531,7 +1531,7 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         if (!current) continue;
 
         // GLOG("GameObject %s", current->GetName().c_str());
-        if (current->GetName() == name) return current;
+        if (HashString(current->GetName()) == HashString(name)) return current;
 
         for (UID grandChildUID : current->children)
         {
