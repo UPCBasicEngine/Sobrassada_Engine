@@ -435,6 +435,7 @@ class CuChulainn : public Character
     float curseDuration                            = 4.0f;
     float curseTimer                               = 0.0f;
     UID playerMaterial                             = 0;
+    float4 colorRiastrad                              = float4::one;
 
     float timeStopTimer                            = 0.0f;
     float hitTimeStopDuration                      = 0.05f;

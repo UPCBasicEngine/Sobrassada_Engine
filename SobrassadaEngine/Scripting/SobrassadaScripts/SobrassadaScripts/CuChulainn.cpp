@@ -129,6 +129,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Riastrad VFX blur", InspectorField::FieldType::InputText, &riastradBlurName});
     fields.push_back({"Riastrad VFX crack", InspectorField::FieldType::InputText, &riastradCrackName});
     fields.push_back({"Riastrad VFX waring", InspectorField::FieldType::InputText, &riastradWarningName});
+    fields.push_back({"Color Red Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.x, 0.0f, 1.0f});
+    fields.push_back({"Color Green Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.y, 0.0f, 1.0f});
+    fields.push_back({"Color Blue Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.z, 0.0f, 1.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
@@ -2419,6 +2422,17 @@ void CuChulainn::ToggleRiastrad()
     {
         EndCurse();
 
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor.y            = colorRiastrad.y;
+            newColor.x            = colorRiastrad.x;
+            newColor.z            = colorRiastrad.z;
+            mat->SetDiffColor(newColor);
+        }
+
         // Start Riastrad
         AddRiastrad(-100);
         isRiastrad    = true;
@@ -2530,6 +2544,15 @@ void CuChulainn::ToggleRiastrad()
         {
             if (animComponent) animComponent->UseTrigger("Idle");
             state = CharacterStates::IDLE;
+        }
+
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor              = float4::one;
+            mat->SetDiffColor(newColor);
         }
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
@@ -2747,6 +2770,15 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
 
 void CuChulainn::EndCurse()
 {
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor              = float4::one;
+        mat->SetDiffColor(newColor);
+    }
+
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
 
