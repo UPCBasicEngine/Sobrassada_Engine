@@ -539,7 +539,7 @@ void Archer::ActivateHitVFX()
         }
         else
         {
-            GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
+            //GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
         }
         auto shaderScriptComp = hitVfxObject->GetComponent<ShaderScriptComponent*>();
         if (shaderScriptComp != nullptr)

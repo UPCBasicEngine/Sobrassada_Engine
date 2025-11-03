@@ -384,7 +384,7 @@ bool CuChulainn::Init()
         riastradVfxBG = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
     if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
-    GLOG("[WARNING] No riastrad Eye BG VFX Shader Script found for CuChulain");
+    else GLOG("[WARNING] No riastrad Eye BG VFX Shader Script found for CuChulain");
 
     riastradObj = scene->GetGameObjectByName(riastradVfxFGName);
     if (riastradObj)
@@ -673,17 +673,17 @@ bool CuChulainn::Init()
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
     {
-        GLOG("=== PLAYER COLLIDER INFO ===");
-        GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
-        GLOG("Player name: %s", parent->GetName().c_str());
+        //GLOG("=== PLAYER COLLIDER INFO ===");
+        //GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
+        //GLOG("Player name: %s", parent->GetName().c_str());
 
         if (parent->HasTag(HashString("Player")))
         {
-            GLOG("Player has 'Player' tag: YES");
+            //GLOG("Player has 'Player' tag: YES");
         }
         else
         {
-            GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
+            //GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
         }
     }
     else
