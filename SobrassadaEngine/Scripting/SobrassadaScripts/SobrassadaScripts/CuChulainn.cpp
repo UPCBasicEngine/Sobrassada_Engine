@@ -978,6 +978,12 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
+    if (forceIdleState)
+    {
+        ResetState();
+        return;
+    }
+
     if (desiredTransform && CanTransform()) ToggleRiastrad();
     else if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
@@ -2625,8 +2631,9 @@ void CuChulainn::ResetState()
     {
         character->SetDirection(float3::zero);
         character->SetIsRunning(false);
-        //character->EnableMovement(false);
-        if (animComponent) animComponent->UseTrigger("Idle");
+        character->EnableMovement(false);
+        if (animComponent) 
+            animComponent->UseTrigger("Idle");
         state = CharacterStates::IDLE;
     }
 }
