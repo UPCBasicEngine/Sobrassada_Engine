@@ -37,7 +37,7 @@ bool PauseMenuScript::Init()
     upPrev = downPrev = accPrev = false;
 
     audio                       = parent->GetComponent<AudioSourceComponent*>();
-    //if (!audio) GLOG("[WARNING] PauseMenuScript: No audio component found");
+    if (!audio) GLOG("[WARNING] PauseMenuScript: No audio component found");
 
     return true;
 }
