@@ -142,7 +142,7 @@ ResourceNavMesh* NavmeshImporter::LoadNavmesh(const UID navmeshUID)
 
     ResourceNavMesh* resource = new ResourceNavMesh(navmeshUID, "LoadedNavmesh");
     resource->SetDetourNavMesh(navMesh);
-    GLOG("Loaded navmesh binary: %s", navPath.c_str());
+    //GLOG("Loaded navmesh binary: %s", navPath.c_str());
 
     return resource;
 }

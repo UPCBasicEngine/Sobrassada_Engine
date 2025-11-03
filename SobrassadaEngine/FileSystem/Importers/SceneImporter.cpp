@@ -151,12 +151,12 @@ namespace SceneImporter
 
             if (!err.empty())
             {
-                GLOG("Err: %s\n", err.c_str());
+                //GLOG("Err: %s\n", err.c_str());
             }
 
             if (!ret)
             {
-                GLOG("Failed to parse glTF\n");
+                //GLOG("Failed to parse glTF\n");
             }
         }
 

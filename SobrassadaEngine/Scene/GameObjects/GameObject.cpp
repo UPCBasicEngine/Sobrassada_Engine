@@ -1539,6 +1539,6 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         }
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    //GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }

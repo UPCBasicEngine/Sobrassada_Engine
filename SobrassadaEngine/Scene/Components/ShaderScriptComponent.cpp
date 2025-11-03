@@ -89,7 +89,7 @@ void ShaderScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Docum
         scriptData.AddMember("Enabled", scriptEnabled[i], allocator);
         scriptData.AddMember("WasEnabled", scriptWasEnabledLastFrame[i], allocator);
         scriptData.AddMember("RenderType", (int)shaderScriptRenderType[i], allocator);
-        GLOG("Script Name: %s", scriptNames[i].c_str());
+        //GLOG("Script Name: %s", scriptNames[i].c_str());
 
         const auto& fields = scriptInstances[i]->GetFields();
         for (const auto field : fields)

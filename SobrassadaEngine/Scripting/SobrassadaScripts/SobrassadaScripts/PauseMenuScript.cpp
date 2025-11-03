@@ -37,7 +37,7 @@ bool PauseMenuScript::Init()
     upPrev = downPrev = accPrev = false;
 
     audio                       = parent->GetComponent<AudioSourceComponent*>();
-    if (!audio) GLOG("[WARNING] PauseMenuScript: No audio component found");
+    //if (!audio) GLOG("[WARNING] PauseMenuScript: No audio component found");
 
     return true;
 }
@@ -64,7 +64,7 @@ void PauseMenuScript::Show()
 
     if (audio != nullptr)
     {
-        GLOG("Switching Gamestate to menu")
+        //GLOG("Switching Gamestate to menu")
         audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_MENU);
     }
 

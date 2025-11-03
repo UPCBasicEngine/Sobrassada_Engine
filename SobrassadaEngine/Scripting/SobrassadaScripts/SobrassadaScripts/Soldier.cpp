@@ -65,18 +65,19 @@ bool Soldier::Init()
     originalAttackHitboxDelay = attackHitboxDelay;
 
     meleeTrailObject          = parent->GetChildGameObjectByName(meleeTrailName);
-    if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in Soldier")
-    else
-    {
-        GLOG("Melee trail found for melee attack in Soldier")
-        meleeTrailObject->SetEnabled(false);
-    }
+    //if (!meleeTrailObject) GLOG("[WARNING] No melee trail found for melee attack in Soldier")
+    //else
+    //{
+    //    //GLOG("Melee trail found for melee attack in Soldier")
+    //    meleeTrailObject->SetEnabled(false);
+    //}
+    if (meleeTrailObject) meleeTrailObject->SetEnabled(false);
 
     helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
     if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for Soldier")
     else
     {
-        GLOG("Helmet 1 found in Soldier")
+        //GLOG("Helmet 1 found in Soldier")
         helmet1Object->SetEnabled(false);
     }
 
@@ -84,7 +85,7 @@ bool Soldier::Init()
     if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for Soldier")
     else
     {
-        GLOG("Helmet 2 found in Soldier")
+        //GLOG("Helmet 2 found in Soldier")
         helmet2Object->SetEnabled(false);
     }
 
@@ -92,7 +93,7 @@ bool Soldier::Init()
     if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for Soldier")
     else
     {
-        GLOG("Helmet 3 found in Soldier")
+        //GLOG("Helmet 3 found in Soldier")
         helmet3Object->SetEnabled(false);
     }
 
@@ -100,7 +101,7 @@ bool Soldier::Init()
     if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
     else
     {
-        GLOG("Helmet 4 found in Soldier")
+        //GLOG("Helmet 4 found in Soldier")
         helmet4Object->SetEnabled(false);
     }
 
@@ -108,7 +109,7 @@ bool Soldier::Init()
     if (!meleeVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
     else
     {
-        GLOG("MeleVFX found in Soldier")
+        //GLOG("MeleVFX found in Soldier")
         if (!meleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->IsInitialized())
         {
             meleeVfxObject->GetComponent<ShaderScriptComponent*>()->GetScriptByType<AttackVfxSpritesheet>()->Init();
@@ -120,7 +121,7 @@ bool Soldier::Init()
     if (!melee2VfxObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
     else
     {
-        GLOG("MeleVFX found in Soldier")
+        //GLOG("MeleVFX found in Soldier")
         if (!melee2VfxObject->GetComponent<ShaderScriptComponent*>()
                  ->GetScriptByType<AttackVfxSpritesheet>()
                  ->IsInitialized())
@@ -134,7 +135,7 @@ bool Soldier::Init()
     if (!thrustVfxObject) GLOG("[WARNING] No melee VFX found for melee attack in Soldier")
     else
     {
-        GLOG("MeleVFX found in Soldier")
+        //GLOG("MeleVFX found in Soldier")
         if (!thrustVfxObject->GetComponent<ShaderScriptComponent*>()
                  ->GetScriptByType<AttackVfxSpritesheet>()
                  ->IsInitialized())
@@ -443,7 +444,7 @@ void Soldier::SearchForPlayer()
     {
         isSearching = false;
         agentAI->SetSpeed(chaseSpeed, 8.0);
-        GLOG("Speed set to %f", chaseSpeed);
+        //GLOG("Speed set to %f", chaseSpeed);
         currentState = SoldierStates::PATROL;
     }
 }
@@ -454,7 +455,7 @@ void Soldier::Attack(float deltaTime)
 
     if (!isAttacking)
     {
-        GLOG("ATTACK ENEMY");
+        //GLOG("ATTACK ENEMY");
         if (animComponent)
         {
             attackHitboxDelay    = originalAttackHitboxDelay;
@@ -497,7 +498,7 @@ void Soldier::Attack(float deltaTime)
                 if (inSecondWindow && audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_SOLDIER_SLASH_2);
                 if (inFirstWindow)
                 {
-                    GLOG("First window is true");
+                    //GLOG("First window is true");
                     SetAttackVFX(meleeVfxObject);
                 }
                 if (inSecondWindow)
@@ -593,7 +594,7 @@ void Soldier::ChangeState()
             {
                 playerScript->AddEnemy();
                 countedInPlayerEnemies = true;
-                GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
+                //GLOG("Enemy entered. Total unique enemies colliding: %zu", playerScript->GetEnemiesCount());
             }
         }
     }
@@ -669,7 +670,7 @@ const char* Soldier::ManageAttackAnimations()
 
 void Soldier::SetOnWaiting()
 {
-    GLOG("Soldier %s is waiting", parent->GetName().c_str());
+    //GLOG("Soldier %s is waiting", parent->GetName().c_str());
     currentState = SoldierStates::CHEERING;
     agentAI->SetSpeed(0.0f, 10.0f);
     if (animComponent) animComponent->UseTrigger("cheer");
@@ -709,7 +710,7 @@ void Soldier::SelectRandomHelmet()
             if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for  Soldier")
             else
             {
-                GLOG("Helmet 2 found for in Soldier")
+                //GLOG("Helmet 2 found for in Soldier")
                 helmet2Object->SetEnabled(true);
             }
             break;
@@ -718,7 +719,7 @@ void Soldier::SelectRandomHelmet()
             if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for  Soldier")
             else
             {
-                GLOG("Helmet 3 found for in Soldier")
+                //GLOG("Helmet 3 found for in Soldier")
                 helmet3Object->SetEnabled(true);
             }
             break;
@@ -735,7 +736,7 @@ void Soldier::SelectRandomHelmet()
             if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for  Soldier")
             else
             {
-                GLOG("Helmet 1 found for in Soldier")
+                //GLOG("Helmet 1 found for in Soldier")
                 helmet1Object->SetEnabled(true);
             }
             break;
@@ -744,7 +745,7 @@ void Soldier::SelectRandomHelmet()
             if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
             else
             {
-                GLOG("Helmet 4 found for in Soldier")
+                //GLOG("Helmet 4 found for in Soldier")
                 helmet4Object->SetEnabled(true);
             }
             break;
@@ -760,7 +761,7 @@ void Soldier::SelectRandomHelmet()
         if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for  Soldier")
         else
         {
-            GLOG("Helmet 1 found for in Soldier")
+            //GLOG("Helmet 1 found for in Soldier")
             helmet1Object->SetEnabled(true);
         }
         break;
@@ -769,7 +770,7 @@ void Soldier::SelectRandomHelmet()
         if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for  Soldier")
         else
         {
-            GLOG("Helmet 2 found for in Soldier")
+            //GLOG("Helmet 2 found for in Soldier")
             helmet2Object->SetEnabled(true);
         }
         break;
@@ -778,7 +779,7 @@ void Soldier::SelectRandomHelmet()
         if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for  Soldier")
         else
         {
-            GLOG("Helmet 3 found for in Soldier")
+            //GLOG("Helmet 3 found for in Soldier")
             helmet3Object->SetEnabled(true);
         }
         break;
@@ -787,7 +788,7 @@ void Soldier::SelectRandomHelmet()
         if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
         else
         {
-            GLOG("Helmet 4 found for in Soldier")
+            //GLOG("Helmet 4 found for in Soldier")
             helmet4Object->SetEnabled(true);
         }
         break;

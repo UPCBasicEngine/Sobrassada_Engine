@@ -1076,7 +1076,7 @@ void CuChulainn::GetInputs()
     {
         if (newIsRunning && !moveFromCollision)
         {
-            GLOG("Start running");
+            //GLOG("Start running");
             const HashString walkStateName = HashString("Walk");
             for (State& state : animComponent->GetResourceStateMachine()->states)
             {
@@ -1096,7 +1096,7 @@ void CuChulainn::GetInputs()
         }
         else if (!newIsRunning && moveFromCollision)
         {
-            GLOG("Stop running");
+            //GLOG("Stop running");
             const HashString walkStateName = HashString("Walk");
             for (State& state : animComponent->GetResourceStateMachine()->states)
             {
@@ -2035,13 +2035,13 @@ void CuChulainn::ActivateArrowMark(float3 targetPos)
 {
     if (!markVfxObject)
     {
-        GLOG("VFX: ERROR - markVfxObject is NULL!");
+        //GLOG("VFX: ERROR - markVfxObject is NULL!");
         return;
     }
 
     SetArrowMark(targetPos);
 
-    GLOG("VFX: Activating arrow mark at position (%.2f, %.2f, %.2f)", targetPos.x, targetPos.y, targetPos.z);
+    //GLOG("VFX: Activating arrow mark at position (%.2f, %.2f, %.2f)", targetPos.x, targetPos.y, targetPos.z);
 
     markVfxTimer    = 0.0f;
     markVfxIsActive = true;
@@ -2050,19 +2050,19 @@ void CuChulainn::ActivateArrowMark(float3 targetPos)
     if (markVfxIsActive && markVfxObject && !markVfxObject->IsEnabled())
     {
 
-        GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
+        //GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
 
         markVfxTimer    = 0.0f;
         markVfxIsActive = true;
 
         markVfxObject->SetEnabled(true);
-        GLOG("VFX: Object enabled");
+        //GLOG("VFX: Object enabled");
 
         auto meshComp = markVfxObject->GetComponent<MeshComponent*>();
         if (meshComp != nullptr)
         {
             meshComp->SetEnabled(false);
-            GLOG("VFX: MeshComponent disabled successfully");
+            //GLOG("VFX: MeshComponent disabled successfully");
         }
         else
         {
@@ -2071,13 +2071,13 @@ void CuChulainn::ActivateArrowMark(float3 targetPos)
         auto shaderScriptComp = markVfxObject->GetComponent<ShaderScriptComponent*>();
         if (shaderScriptComp != nullptr)
         {
-            GLOG("VFX: ShaderScriptComponent found");
+            //GLOG("VFX: ShaderScriptComponent found");
 
             auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
             if (attackVfxScript)
             {
                 attackVfxScript->Reset();
-                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+                //GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
             }
             else
             {
@@ -2091,7 +2091,7 @@ void CuChulainn::SetArrowMark(float3 posArrow)
 {
     if (!markVfxObject)
     {
-        GLOG("VFX: ERROR - markObject is NULL!");
+        //GLOG("VFX: ERROR - markObject is NULL!");
         return;
     }
     markVfxObject->SetPosition(posArrow);
@@ -2262,10 +2262,10 @@ void CuChulainn::Respawn()
 void CuChulainn::TakeDamage(int amount)
 {
     int prev = currentHealth;
-    GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
+    //GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
     if (godMode || isRiastrad || state == CharacterStates::ULTIMATE)
     {
-        GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
+        //GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
         return;
     }
     Character::TakeDamage(amount);
@@ -2396,7 +2396,7 @@ void CuChulainn::ChargeAttack()
         }
         else
         {
-            GLOG("NOT CHARGED ENOUFGH");
+            //GLOG("NOT CHARGED ENOUGH");
             character->EnableMovement(true);
             state = CharacterStates::IDLE;
             if (animComponent) animComponent->UseTrigger("Idle");
@@ -2800,7 +2800,7 @@ bool CuChulainn::IsBlockedAhead(
         if (userPointer)
         {
             hitGO = userPointer->collider->GetParent();
-            GLOG("[IsBlockedAhead]: Physics Raycast hit!, %s", hitGO->GetName().c_str());
+            //GLOG("[IsBlockedAhead]: Physics Raycast hit!, %s", hitGO->GetName().c_str());
         }
 
         DebugDrawModule* debug = AppEngine->GetDebugDrawModule();

@@ -48,7 +48,7 @@ bool SpawnPoint::Init()
     if (tree == nullptr)
     {
         isSetupCorrectly = false;
-        GLOG("[ERROR] No child go for tree found")
+        //GLOG("[ERROR] No child go for tree found")
         return false;
     }
 

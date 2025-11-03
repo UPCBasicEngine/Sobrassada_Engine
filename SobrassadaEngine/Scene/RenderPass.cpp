@@ -55,6 +55,8 @@ RenderPass::RenderPass()
         );
     }
 
+    glGenBuffers(1, &shadowUBO);
+
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     glGenFramebuffers(1, &depthFBO);
@@ -176,6 +178,7 @@ RenderPass::~RenderPass()
     reductionTextures.clear();
 
     glDeleteTextures(TotalShadowMaps, &spotShadowMaps[0]);
+    glDeleteBuffers(1, &shadowUBO);
 
     if (noiseTexture) App->GetResourcesModule()->ReleaseResource(noiseTexture);
 
@@ -778,9 +781,7 @@ void RenderPass::ShadowMapPassRender(
     // DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
     // debugdraw->DrawFrustrum(lightProj, lightView);
 
-    unsigned int ubo               = 0;
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, shadowUBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -805,7 +806,7 @@ void RenderPass::ShadowMapPassRender(
             meshesToRender.push_back(mesh);
     }
 
-    batchManager->RenderShadowMap(meshesToRender, ubo);
+    batchManager->RenderShadowMap(meshesToRender, shadowUBO);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
@@ -827,7 +828,7 @@ void RenderPass::ShadowMapPassRender(
         shadowObjectsToRenderSpot.clear();
 
         lightFrustum.UpdateFrustumPlanes(spotToRender[i]->GetViewMatrix(), spotToRender[i]->GetProjectionMatrix());
-        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
+        // App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
 
         if (spotToRender[i]->GetStaticObjects().empty())
         {
@@ -868,7 +869,7 @@ void RenderPass::ShadowMapPassRender(
         lightmatrices.viewMatrix       = spotToRender[i]->GetViewMatrix();
         lightmatrices.projectionMatrix = spotToRender[i]->GetProjectionMatrix();
 
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBindBuffer(GL_UNIFORM_BUFFER, shadowUBO);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -881,12 +882,10 @@ void RenderPass::ShadowMapPassRender(
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(SpotlightShadow) * i, sizeof(SpotlightShadow), &currentShadow);
 
-        batchManager->RenderShadowMap(meshesToRender, ubo);
+        batchManager->RenderShadowMap(meshesToRender, shadowUBO);
     }
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-
-    glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glDisable(GL_DEPTH_CLAMP);

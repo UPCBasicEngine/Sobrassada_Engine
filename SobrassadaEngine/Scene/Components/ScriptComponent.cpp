@@ -16,7 +16,11 @@
 #include "PhysicsModule.h"
 #include "ShaderScriptComponent.h"
 #include <debug_draw.hpp>
+#ifdef OPTICK
 #include <optick.h>
+#endif
+
+
 
 ScriptComponent::ScriptComponent(UID uid, GameObject* parent) : Component(uid, parent, "Script", COMPONENT_SCRIPT)
 {
@@ -84,7 +88,7 @@ void ScriptComponent::Save(rapidjson::Value& targetState, rapidjson::Document::A
         scriptData.AddMember("Script Name", rapidjson::Value(scriptNames[i].c_str(), allocator), allocator);
         scriptData.AddMember("Enabled", scriptEnabled[i], allocator);
         scriptData.AddMember("WasEnabled", scriptWasEnabledLastFrame[i], allocator);
-        GLOG("Script Name: %s", scriptNames[i].c_str());
+        //GLOG("Script Name: %s", scriptNames[i].c_str());
 
         const auto& fields = scriptInstances[i]->GetFields();
         for (const auto field : fields)
