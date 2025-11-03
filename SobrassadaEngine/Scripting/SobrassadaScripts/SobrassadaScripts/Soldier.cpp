@@ -711,6 +711,7 @@ void Soldier::SelectRandomHelmet()
             {
                 GLOG("Helmet 2 found for in Soldier")
                 helmet2Object->SetEnabled(true);
+                this->mesh2Name = helmet2Name;
             }
             break;
         case 2:
@@ -720,6 +721,7 @@ void Soldier::SelectRandomHelmet()
             {
                 GLOG("Helmet 3 found for in Soldier")
                 helmet3Object->SetEnabled(true);
+                this->mesh2Name = helmet3Name;
             }
             break;
         default:
@@ -737,6 +739,7 @@ void Soldier::SelectRandomHelmet()
             {
                 GLOG("Helmet 1 found for in Soldier")
                 helmet1Object->SetEnabled(true);
+                this->mesh2Name = helmet1Name;
             }
             break;
         case 2:
@@ -746,6 +749,7 @@ void Soldier::SelectRandomHelmet()
             {
                 GLOG("Helmet 4 found for in Soldier")
                 helmet4Object->SetEnabled(true);
+                this->mesh2Name = helmet4Name;
             }
             break;
         default:
@@ -753,47 +757,7 @@ void Soldier::SelectRandomHelmet()
         }
     }
 
-    switch (dis2(gen2))
-    {
-    case 1:
-        helmet1Object = parent->GetChildGameObjectByName(helmet1Name);
-        if (!helmet1Object) GLOG("[WARNING] No helmet 1 found for  Soldier")
-        else
-        {
-            GLOG("Helmet 1 found for in Soldier")
-            helmet1Object->SetEnabled(true);
-        }
-        break;
-    case 2:
-        helmet2Object = parent->GetChildGameObjectByName(helmet2Name);
-        if (!helmet2Object) GLOG("[WARNING] No helmet 2 found for  Soldier")
-        else
-        {
-            GLOG("Helmet 2 found for in Soldier")
-            helmet2Object->SetEnabled(true);
-        }
-        break;
-    case 3:
-        helmet3Object = parent->GetChildGameObjectByName(helmet3Name);
-        if (!helmet3Object) GLOG("[WARNING] No helmet 3 found for  Soldier")
-        else
-        {
-            GLOG("Helmet 3 found for in Soldier")
-            helmet3Object->SetEnabled(true);
-        }
-        break;
-    case 4:
-        helmet4Object = parent->GetChildGameObjectByName(helmet4Name);
-        if (!helmet4Object) GLOG("[WARNING] No helmet 4 found for  Soldier")
-        else
-        {
-            GLOG("Helmet 4 found for in Soldier")
-            helmet4Object->SetEnabled(true);
-        }
-        break;
-    default:
-        break;
-    }
+    this->InitializeSecondaryMeshes();
 }
 
 void Soldier::PlayHighlightSequence()
