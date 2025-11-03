@@ -129,24 +129,7 @@ bool Character::Init()
         onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
         if (onHitVfx2) onHitVfx2->SetEnabled(false);
 
-        if (!mesh2Name.empty())
-        {
-            GameObject* mesh2Object = parent->GetChildGameObjectByName(mesh2Name);
-            if (mesh2Object)
-            {
-                mesh2 = mesh2Object->GetComponent<MeshComponent*>();
-                if (mesh2) mesh2->SetEnabled(true);
-                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
-
-                color2Change = mesh2Object->GetComponent<ShaderScriptComponent*>();
-                if (color2Change) color2Change->SetEnabled(false);
-                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
-            }
-            else
-            {
-                GLOG("[WARNING - %s] No mesh 2 object found in children", parent->GetName().c_str())
-            }
-        }
+       InitializeSecondaryMeshes();
 
         if (!mesh3Name.empty())
         {
@@ -621,6 +604,28 @@ void Character::Die()
     }
 
     if (associatedBarrier != nullptr) associatedBarrier->EnemyDied();
+}
+
+void Character::InitializeSecondaryMeshes()
+{
+    if (!mesh2Name.empty())
+    {
+        GameObject* mesh2Object = parent->GetChildGameObjectByName(mesh2Name);
+        if (mesh2Object)
+        {
+            mesh2 = mesh2Object->GetComponent<MeshComponent*>();
+            if (mesh2) mesh2->SetEnabled(true);
+            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+            color2Change = mesh2Object->GetComponent<ShaderScriptComponent*>();
+            if (color2Change) color2Change->SetEnabled(false);
+            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+        }
+        else
+        {
+            GLOG("[WARNING - %s] No mesh 2 object found in children", parent->GetName().c_str())
+        }
+    }
 }
 
 void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)
