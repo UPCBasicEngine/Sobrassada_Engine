@@ -146,7 +146,7 @@ class RenderPass
     unsigned int decalVAO, decalVBO, decalEBO;
 
     // Shadows
-    unsigned int depthTexture, depthFBO, spotShadowSSBO;
+    unsigned int depthTexture, depthFBO, spotShadowSSBO, shadowUBO;
     float4x4 lightView;
     float4x4 lightProj;
 

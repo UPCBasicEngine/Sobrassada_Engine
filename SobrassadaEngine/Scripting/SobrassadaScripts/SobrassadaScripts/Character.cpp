@@ -85,17 +85,17 @@ bool Character::Init()
     else animComponent->OnPlay(false);
 
     characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
-    if (!characterCollider)
-        GLOG(
-            "Character capsule collider component not found for %s in character %s", parent->GetName().c_str(),
-            parent->GetName().c_str()
-        )
+    //if (!characterCollider)
+    //    GLOG(
+    //        "Character capsule collider component not found for %s in character %s", parent->GetName().c_str(),
+    //        parent->GetName().c_str()
+    //    )
 
     weaponCollider = parent->GetComponentChild<CapsuleColliderComponent*>(AppEngine);
 
     if (!weaponCollider)
     {
-        GLOG("[WARNING] No capsule weapon collider in child");
+        //GLOG("[WARNING] No capsule weapon collider in child");
     }
     else
     {
@@ -170,11 +170,11 @@ bool Character::Init()
 
         GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
         if (glowObject) glow = glowObject;
-        if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+        //if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
 
         GameObject* hitObject = parent->GetChildGameObjectByName(hitName);
         if (hitObject) hit = hitObject;
-        if (!hitObject) GLOG("[WARNING - %s] No hit object found in children", parent->GetName())
+        //if (!hitObject) GLOG("[WARNING - %s] No hit object found in children", parent->GetName())
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();

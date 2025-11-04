@@ -39,7 +39,7 @@ namespace TextureImporter
                     isTextureHDR = true;
                     if (FAILED(hr))
                     {
-                        GLOG("Failed to load texture: %s", sourceFilePath);
+                        //GLOG("Failed to load texture: %s", sourceFilePath);
                         return 0;
                     }
                 }
