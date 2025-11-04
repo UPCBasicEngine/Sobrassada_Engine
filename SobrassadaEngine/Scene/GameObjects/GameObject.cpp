@@ -35,6 +35,7 @@
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
 #include "VolumetricAreaComponent.h"
+#include "DynamicOctree.h"
 
 #include "imgui.h"
 #include <queue>
@@ -269,6 +270,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     DuplicateComponents(compTuple, refObject->GetComponentsTupleRef());
 
     OnAABBUpdated();
+
+    if (mobilitySettings == DYNAMIC) App->GetSceneModule()->GetScene()->GetDynamicOctree()->InsertElement(this);
 }
 
 GameObject::GameObject(const rapidjson::Value& initialState) : uid(initialState["UID"].GetUint64())
