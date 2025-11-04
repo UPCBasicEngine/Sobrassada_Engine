@@ -677,6 +677,13 @@ void Boss::Update(float deltaTime)
         waitForBarFill = false;
     }
 
+    if (playOutro && animComponent && animComponent->IsFinished())
+    {
+        ChangeMusic();
+
+        playOutro = false;
+    }
+
     if (stopLogic && changeScene && !changeScene->IsEnabled())
     {
         timerToChangeScene += deltaTime;
@@ -1190,12 +1197,13 @@ void Boss::Death(float deltaTime)
 
             if (animComponent) animComponent->UseTrigger("Death");
             if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_FERDIAD_DEATH);
-            ChangeMusic();
         }
 
         if (animComponent && animComponent->IsFinished())
         {
             stopLogic = true;
+
+            playOutro = true;
 
             if (fadeInOutHealthBar) fadeInOutHealthBar->FadeOut();
         }
