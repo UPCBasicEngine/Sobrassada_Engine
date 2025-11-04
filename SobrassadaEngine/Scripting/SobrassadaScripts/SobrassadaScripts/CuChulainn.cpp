@@ -13,6 +13,7 @@
 #include "GameObject.h"
 #include "GameSession.h"
 #include "GameTimer.h"
+#include "Standalone/UI/ImageComponent.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
 #include "MusicManager.h"
@@ -88,6 +89,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
     fields.push_back({"Ultimate Icon Name", InspectorField::FieldType::InputText, &ultimateIconName});
+    fields.push_back({"Ultimate Blocked Image", InspectorField::FieldType::Resource, &ultiBlockedImageUID});
+    fields.push_back({"Ultimate Unlocked Image", InspectorField::FieldType::Resource, &ultiUnlockedImageUID});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
@@ -100,6 +103,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
+
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
     fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
@@ -129,6 +133,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Riastrad VFX blur", InspectorField::FieldType::InputText, &riastradBlurName});
     fields.push_back({"Riastrad VFX crack", InspectorField::FieldType::InputText, &riastradCrackName});
     fields.push_back({"Riastrad VFX waring", InspectorField::FieldType::InputText, &riastradWarningName});
+    fields.push_back({"Color Red Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.x, 0.0f, 1.0f});
+    fields.push_back({"Color Green Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.y, 0.0f, 1.0f});
+    fields.push_back({"Color Blue Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.z, 0.0f, 1.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
@@ -579,7 +586,7 @@ bool CuChulainn::Init()
     }
     if (!dashIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
 
-    GameObject* ultimateIconObj = scene->GetGameObjectByName(ultimateIconName);
+    ultimateIconObj = scene->GetGameObjectByName(ultimateIconName);
     if (ultimateIconObj)
     {
         ShaderScriptComponent* shaderScript = ultimateIconObj->GetComponent<ShaderScriptComponent*>();
@@ -978,10 +985,16 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
+    if (forceIdleState)
+    {
+        ResetState();
+        return;
+    }
+
     if (desiredTransform && CanTransform()) ToggleRiastrad();
     else if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
-    else if (desiredUltimate && CanUltimate()) UltimateAttack();
+    else if (desiredUltimate && !ultimateblocked && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
@@ -2413,6 +2426,14 @@ void CuChulainn::ToggleRiastrad()
     {
         EndCurse();
 
+        ultimateblocked                 = true;
+
+        ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
+        if (ultimateImgIcon)
+        {
+            if (ultiBlockedImageUID != INVALID_UID) ultimateImgIcon->ChangeTexture(ultiBlockedImageUID);
+        }
+
         // Start Riastrad
         AddRiastrad(-100);
         isRiastrad    = true;
@@ -2526,6 +2547,23 @@ void CuChulainn::ToggleRiastrad()
             state = CharacterStates::IDLE;
         }
 
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor              = float4::one;
+            mat->SetDiffColor(newColor);
+        }
+
+        ultimateblocked                 = false;
+
+        ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
+        if (ultimateImgIcon)
+        {
+            if (ultiUnlockedImageUID!=INVALID_UID) ultimateImgIcon->ChangeTexture(ultiUnlockedImageUID);
+        }
+
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
         if (musicManager != nullptr)
         {
@@ -2597,6 +2635,17 @@ void CuChulainn::EnableRiastradVfx()
         riastradGroundExplosion->SetEnabled(true);
         riastradGroundExplosion->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
+
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor.y            = colorRiastrad.y;
+        newColor.x            = colorRiastrad.x;
+        newColor.z            = colorRiastrad.z;
+        mat->SetDiffColor(newColor);
+    }
 }
 
 void CuChulainn::AddRiastrad(int amount)
@@ -2625,8 +2674,9 @@ void CuChulainn::ResetState()
     {
         character->SetDirection(float3::zero);
         character->SetIsRunning(false);
-        //character->EnableMovement(false);
-        if (animComponent) animComponent->UseTrigger("Idle");
+        character->EnableMovement(false);
+        if (animComponent) 
+            animComponent->UseTrigger("Idle");
         state = CharacterStates::IDLE;
     }
 }
@@ -2740,6 +2790,15 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
 
 void CuChulainn::EndCurse()
 {
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor              = float4::one;
+        mat->SetDiffColor(newColor);
+    }
+
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
 

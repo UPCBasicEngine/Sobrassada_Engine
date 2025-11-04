@@ -6,6 +6,7 @@ class MoveGOInSpline;
 class SplineComponent;
 class CameraMovement;
 class CharacterControllerComponent;
+class CuChulainn;
 
 class HighlightCharacter : public Script
 {
@@ -34,6 +35,7 @@ class HighlightCharacter : public Script
     bool setupTargetOnCollision                    = false;
     bool isExecuting                               = false;
     bool neverExecuted                             = true;
+    bool noResetState                              = false;
 
     GameObject* player                             = nullptr;
     CharacterControllerComponent* playerController = nullptr;
@@ -46,4 +48,5 @@ class HighlightCharacter : public Script
     MoveGOInSpline* splineMovementScript           = nullptr;
 
     NameDisplay* nameDisplay                       = nullptr;
+    CuChulainn* cuPlayer                           = nullptr;
 };
