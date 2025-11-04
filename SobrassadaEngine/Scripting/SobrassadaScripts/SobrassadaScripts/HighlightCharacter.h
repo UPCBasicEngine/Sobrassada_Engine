@@ -27,8 +27,7 @@ class HighlightCharacter : public Script
 
     float secondSplinePointOffset                  = 0.85f;
     float zoomMultiplier                           = 30.0f;
-
-    bool hidePlayerWhileZooming                    = true;
+    
     bool useOnlyZoom                               = false;
 
     bool isSetupCorrectly                          = true;

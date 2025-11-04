@@ -142,6 +142,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Attack VFX Explosion", InspectorField::FieldType::InputText, &attackVfxExplosionName});
     fields.push_back({"ArrowHit VFX object", InspectorField::FieldType::InputText, &arrowHitVfxName});
     fields.push_back({"Arrow Hit VFX duration", InspectorField::FieldType::Float, &arrowHitVfxDuration, 0.1f, 5.0f});
+    fields.push_back({"Mark Arrow VFX object", InspectorField::FieldType::InputText, &markVfxName});
+    fields.push_back({"Mark Arrow VFX duration", InspectorField::FieldType::Float, &markVfxDuration, 0.1f, 5.0f});
 
     fields.push_back({"Dash Trail object", InspectorField::FieldType::InputText, &dashTrailName});
     fields.push_back({"Dash decal object", InspectorField::FieldType::InputText, &dashDecalName});
@@ -245,6 +247,10 @@ bool CuChulainn::Init()
     arrowHitVfxObject = scene->GetGameObjectByName(arrowHitVfxName);
     if (!arrowHitVfxObject) GLOG("[WARNING] No arrow Hit particles found for Hits in CuChulain")
     else arrowHitVfxObject->SetEnabled(false);
+
+    markVfxObject = scene->GetGameObjectByName(markVfxName);
+    if (!markVfxObject) GLOG("[WARNING] No arrow MARK particles found for marks in CuChulain")
+    else markVfxObject->SetEnabled(false);
 
     GameObject* attackVfxObj = scene->GetGameObjectByName(attackVfxHorizontal1Name);
     if (attackVfxObj) attackVfxHorizontal1 = attackVfxObj->GetComponent<ShaderScriptComponent*>();
@@ -710,6 +716,14 @@ bool CuChulainn::Init()
     std::string currentScenename = AppEngine->GetSceneModule()->GetScene()->GetSceneName();
     if (currentScenename == "SCENE_Tutorial" && animComponent)
     {
+        GameObject* focusPoint = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("PlayerFocusPoint");
+        if (focusPoint == nullptr) focusPoint = parent;
+        Quat cameraOrientation = Quat(
+            AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("Camera")->GetGlobalTransform().RotatePart()
+        );
+        const float3 zoomVector = cameraOrientation.Transform(float3(0, 0, -1)).Normalized();
+        cameraObject->SetLocalPosition(focusPoint->GetGlobalTransform().TranslatePart() + 30 * zoomVector - parent->GetParentGlobalTransform().TranslatePart()); 
+        
         animComponent->UseTrigger("Respawn");
         controlsLocked = true;
         character->EnableMovement(false);
@@ -1228,6 +1242,15 @@ void CuChulainn::GetInputs()
     }
 }
 
+float3 CuChulainn::GetMark() const
+{
+    if (markVfxObject)
+    {
+        return markVfxObject->GetPosition();
+    }
+    return float3::zero;
+}
+
 bool CuChulainn::CanDash() const
 {
     if (!dashUnlocked) return false; // When tutorial map is correctly fixed, put this to make progression
@@ -1364,6 +1387,20 @@ void CuChulainn::UpdateTimers(float deltaTime)
             arrowHitVfxObject->SetEnabled(false);
             arrowHitVfxTimer = 0.0f;
             arrowVfxIsActive = false;
+        }
+    }
+
+    //mark arrow
+     if (markVfxIsActive && markVfxObject && markVfxObject->IsEnabled())
+    {
+         GLOG("MARK TIMER ENTER");
+        markVfxTimer += deltaTime;
+        if (markVfxTimer >= markVfxDuration)
+        {
+            GLOG("DEACTIVATING VFX MARK");
+            markVfxObject->SetEnabled(false);
+            markVfxTimer = 0.0f;
+            markVfxIsActive = false;
         }
     }
 
@@ -1994,8 +2031,75 @@ void CuChulainn::UpdateUltimateVfx()
     vfxTimeUnscaledSec = 0.0f;
 }
 
+void CuChulainn::ActivateArrowMark(float3 targetPos)
+{
+    if (!markVfxObject)
+    {
+        GLOG("VFX: ERROR - markVfxObject is NULL!");
+        return;
+    }
+
+    SetArrowMark(targetPos);
+
+    GLOG("VFX: Activating arrow mark at position (%.2f, %.2f, %.2f)", targetPos.x, targetPos.y, targetPos.z);
+
+    markVfxTimer    = 0.0f;
+    markVfxIsActive = true;
+    markVfxObject->SetEnabled(true);
+
+    if (markVfxIsActive && markVfxObject && !markVfxObject->IsEnabled())
+    {
+
+        GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
+
+        markVfxTimer    = 0.0f;
+        markVfxIsActive = true;
+
+        markVfxObject->SetEnabled(true);
+        GLOG("VFX: Object enabled");
+
+        auto meshComp = markVfxObject->GetComponent<MeshComponent*>();
+        if (meshComp != nullptr)
+        {
+            meshComp->SetEnabled(false);
+            GLOG("VFX: MeshComponent disabled successfully");
+        }
+        else
+        {
+            GLOG("VFX: WARNING - No MeshComponent found on %s", markVfxObject->GetName().c_str());
+        }
+        auto shaderScriptComp = markVfxObject->GetComponent<ShaderScriptComponent*>();
+        if (shaderScriptComp != nullptr)
+        {
+            GLOG("VFX: ShaderScriptComponent found");
+
+            auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
+            if (attackVfxScript)
+            {
+                attackVfxScript->Reset();
+                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+            }
+            else
+            {
+                GLOG("VFX: ERROR - AttackVfxSpritesheet script not found!");
+            }
+        }
+    }
+}
+
+void CuChulainn::SetArrowMark(float3 posArrow)
+{
+    if (!markVfxObject)
+    {
+        GLOG("VFX: ERROR - markObject is NULL!");
+        return;
+    }
+    markVfxObject->SetPosition(posArrow);
+}
+
 void CuChulainn::Aim(float deltaTime)
 {
+ 
     if (!spear) return;
 
     if (state != CharacterStates::AIM)

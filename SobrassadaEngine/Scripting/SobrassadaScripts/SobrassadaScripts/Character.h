@@ -70,7 +70,9 @@ class Character : public Script
     bool CheckDistanceWithPoint(const float3& point) const;
     void RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color);
     GameObject* GetGlowEffect() { return glow; }
+    GameObject* GetHitEffect() { return hit; }
     virtual void Die();
+    void InitializeSecondaryMeshes();
 
   private:
     virtual void HandleState(float deltaTime) {};
@@ -151,6 +153,9 @@ class Character : public Script
 
     std::string glowName                        = "Glow";
     GameObject* glow                            = nullptr;
+
+    std::string hitName                         = "HitArcher";
+    GameObject* hit                           = nullptr;
 
     float3 hitCollisionNormal                   = float3::zero;
     float3 hitGOFront                           = float3::zero;

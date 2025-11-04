@@ -28,6 +28,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_BANSHEE_DEATH = 1421284353U;
         static const AkUniqueID PLAY_SFX_BANSHEE_HURT = 1031600530U;
         static const AkUniqueID PLAY_SFX_BARRIER = 3063927795U;
+        static const AkUniqueID PLAY_SFX_BIRDS = 1990436654U;
         static const AkUniqueID PLAY_SFX_BREAK_01 = 2634635063U;
         static const AkUniqueID PLAY_SFX_BREAK_02 = 2634635060U;
         static const AkUniqueID PLAY_SFX_BREAK_03 = 2634635061U;
@@ -77,6 +78,7 @@ namespace AK
         static const AkUniqueID PLAY_SFX_MC_RIASTRADCHARGED = 811454753U;
         static const AkUniqueID PLAY_SFX_MC_TRANSFORM = 3477603499U;
         static const AkUniqueID PLAY_SFX_MC_ULTIMATEATTACK = 1030865972U;
+        static const AkUniqueID PLAY_SFX_NAMEDISPLAY_INTRO = 2054977340U;
         static const AkUniqueID PLAY_SFX_POOKA_ATTACK = 2845739403U;
         static const AkUniqueID PLAY_SFX_POOKA_BURY = 3379540067U;
         static const AkUniqueID PLAY_SFX_POOKA_BURYDOWN = 3129736499U;
@@ -99,10 +101,15 @@ namespace AK
         static const AkUniqueID PLAY_SFX_TREEOFLIFE_02 = 3055317224U;
         static const AkUniqueID PLAY_SFX_TREEOFLIFE_03 = 3055317225U;
         static const AkUniqueID PLAY_SFX_WATER_01 = 3212841747U;
+        static const AkUniqueID PLAY_SFX_WATER_02 = 3212841744U;
+        static const AkUniqueID PLAY_SFX_WATER_03 = 3212841745U;
+        static const AkUniqueID PLAY_SFX_WATER_04 = 3212841750U;
         static const AkUniqueID PLAY_SFX_WATER_SPOUTS = 278128852U;
         static const AkUniqueID PLAY_SFX_WATERFALL_01 = 1233267134U;
         static const AkUniqueID PLAY_SFX_WATERFALL_02 = 1233267133U;
         static const AkUniqueID PLAY_SFX_WIND_02 = 4018713013U;
+        static const AkUniqueID PLAY_SFX_WIND_03 = 4018713012U;
+        static const AkUniqueID PLAY_SFX_WIND_04 = 4018713011U;
         static const AkUniqueID PLAY_SFX_WIND_BACKGROUND = 3649326455U;
         static const AkUniqueID PLAY_SFX_WIND_HIGHLIGHT = 1323240997U;
         static const AkUniqueID PLAY_TORCH = 2025845440U;
