@@ -85,7 +85,7 @@ void Mirage::Update(float deltaTime)
         mirageDisableComponent2->SetEnabled(false);
         state      = MirageState::Warning;
         stateTimer = 0.0f;
-        GLOG("Calling gameobject");
+        /*GLOG("Calling gameobject");*/
 
         break;
     }
@@ -93,7 +93,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Warning:
     {
         stateTimer += deltaTime;
-        GLOG("Activating gameobject");
+        //GLOG("Activating gameobject");
 
         if (stateTimer >= warningDelay)
         {

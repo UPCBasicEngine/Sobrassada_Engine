@@ -62,11 +62,9 @@ Character::Character(
         fields.push_back({"AI Attack Range", InspectorField::FieldType::Float, &rangeAIAttack, 0.0f, 25.0f});
         fields.push_back({"AI Max Detection Range", InspectorField::FieldType::Float, &maxDetectionRange, 0.0f, 30.0f});
         fields.push_back({"Player search duration", InspectorField::FieldType::Float, &searchDuration, 0.0f, 10.0f});
-        fields.push_back({"Mesh name", InspectorField::FieldType::InputText, &meshName});
-        if (type == CharacterType::Boss || type == CharacterType::Soldier)
-            fields.push_back({"Mesh 2 name", InspectorField::FieldType::InputText, &mesh2Name});
         if (type == CharacterType::Boss)
         {
+            fields.push_back({"Mesh 2 name", InspectorField::FieldType::InputText, &mesh2Name});
             fields.push_back({"Mesh 3 name", InspectorField::FieldType::InputText, &mesh3Name});
             fields.push_back({"Mesh 4 name", InspectorField::FieldType::InputText, &mesh4Name});
         }
@@ -87,17 +85,17 @@ bool Character::Init()
     else animComponent->OnPlay(false);
 
     characterCollider = parent->GetComponent<CapsuleColliderComponent*>();
-    if (!characterCollider)
-        GLOG(
-            "Character capsule collider component not found for %s in character %s", parent->GetName().c_str(),
-            parent->GetName().c_str()
-        )
+    //if (!characterCollider)
+    //    GLOG(
+    //        "Character capsule collider component not found for %s in character %s", parent->GetName().c_str(),
+    //        parent->GetName().c_str()
+    //    )
 
     weaponCollider = parent->GetComponentChild<CapsuleColliderComponent*>(AppEngine);
 
     if (!weaponCollider)
     {
-        GLOG("[WARNING] No capsule weapon collider in child");
+        //GLOG("[WARNING] No capsule weapon collider in child");
     }
     else
     {
@@ -130,24 +128,7 @@ bool Character::Init()
         onHitVfx2 = parent->GetChildGameObjectByName(onHitVfx2Name);
         if (onHitVfx2) onHitVfx2->SetEnabled(false);
 
-        if (!mesh2Name.empty())
-        {
-            GameObject* mesh2Object = parent->GetChildGameObjectByName(mesh2Name);
-            if (mesh2Object)
-            {
-                mesh2 = mesh2Object->GetComponent<MeshComponent*>();
-                if (mesh2) mesh2->SetEnabled(true);
-                // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
-
-                color2Change = mesh2Object->GetComponent<ShaderScriptComponent*>();
-                if (color2Change) color2Change->SetEnabled(false);
-                // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
-            }
-            else
-            {
-                GLOG("[WARNING - %s] No mesh 2 object found in children", parent->GetName().c_str())
-            }
-        }
+       InitializeSecondaryMeshes();
 
         if (!mesh3Name.empty())
         {
@@ -189,7 +170,11 @@ bool Character::Init()
 
         GameObject* glowObject = parent->GetChildGameObjectByName(glowName);
         if (glowObject) glow = glowObject;
-        if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+        //if (!glowObject) GLOG("[WARNING - %s] No glow object found in children", parent->GetName())
+
+        GameObject* hitObject = parent->GetChildGameObjectByName(hitName);
+        if (hitObject) hit = hitObject;
+        //if (!hitObject) GLOG("[WARNING - %s] No hit object found in children", parent->GetName())
     }
 
     startPos = parent->GetGlobalTransform().TranslatePart();
@@ -618,6 +603,28 @@ void Character::Die()
     }
 
     if (associatedBarrier != nullptr) associatedBarrier->EnemyDied();
+}
+
+void Character::InitializeSecondaryMeshes()
+{
+    if (!mesh2Name.empty())
+    {
+        GameObject* mesh2Object = parent->GetChildGameObjectByName(mesh2Name);
+        if (mesh2Object)
+        {
+            mesh2 = mesh2Object->GetComponent<MeshComponent*>();
+            if (mesh2) mesh2->SetEnabled(true);
+            // else GLOG("[WARNING - %s] No mesh component found", parent->GetName().c_str())
+
+            color2Change = mesh2Object->GetComponent<ShaderScriptComponent*>();
+            if (color2Change) color2Change->SetEnabled(false);
+            // else GLOG("[WARNING - %s] No shader script component found", parent->GetName().c_str())
+        }
+        else
+        {
+            GLOG("[WARNING - %s] No mesh 2 object found in children", parent->GetName().c_str())
+        }
+    }
 }
 
 void Character::RenderDebug(std::vector<std::pair<std::string, float2>> logs, float3 color)

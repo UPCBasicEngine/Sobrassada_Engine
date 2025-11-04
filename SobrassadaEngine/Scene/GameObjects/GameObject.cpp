@@ -806,6 +806,11 @@ void GameObject::OnTransformUpdated()
     }
 }
 
+void GameObject::UpdateBonesTransform()
+{
+    globalTransform = GetParentGlobalTransform() * localTransform;
+}
+
 void GameObject::ParentUpdatedComponents()
 {
     if (!IsGloballyEnabled()) return;
@@ -1516,7 +1521,7 @@ void GameObject::SetEnabledRecursive(bool value)
             child->SetEnabledRecursive(value);
 }
 
-GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
+GameObject* GameObject::GetChildGameObjectByName(const std::string& name) 
 {
     std::stack<UID> nodesToVisit;
     for (UID childUID : children)
@@ -1533,7 +1538,7 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         if (!current) continue;
 
         // GLOG("GameObject %s", current->GetName().c_str());
-        if (current->GetName() == name) return current;
+        if (HashString(current->GetName()) == HashString(name)) return current;
 
         for (UID grandChildUID : current->children)
         {
@@ -1541,6 +1546,6 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         }
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    //GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }

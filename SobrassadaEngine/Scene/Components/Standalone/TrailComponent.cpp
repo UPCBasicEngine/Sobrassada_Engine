@@ -47,7 +47,7 @@ TrailComponent::TrailComponent(UID uid, GameObject* parent) : Component(uid, par
     indices.reserve(maxIndices * sizeof(uint32_t));
 
     localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
-    parent->OnAABBUpdated();
+    //parent->OnAABBUpdated();
 }
 
 TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject* parent)
@@ -114,7 +114,7 @@ TrailComponent::TrailComponent(const rapidjson::Value& initialState, GameObject*
     indices.reserve(maxIndices * sizeof(uint32_t));
 
     localComponentAABB = AABB(float3(-0.5, -0.5, -0.5), float3(0.5, 0.5, 0.5));
-    parent->OnAABBUpdated();
+    //parent->OnAABBUpdated();
 }
 
 TrailComponent::~TrailComponent()

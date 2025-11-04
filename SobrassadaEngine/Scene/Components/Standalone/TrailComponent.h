@@ -42,7 +42,7 @@ class TrailComponent : public Component
     void ParentUpdated() override;
 
     void UpdateTexture(UID newTextureUID);
-    
+
  private:
     void ClearTrail();
 

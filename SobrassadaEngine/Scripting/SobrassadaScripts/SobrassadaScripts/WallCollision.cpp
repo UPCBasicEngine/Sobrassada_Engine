@@ -11,14 +11,14 @@ WallCollision::WallCollision(GameObject* parent) : Script(parent)
 
 bool WallCollision::Init()
 {
-    GLOG("INIT INIT INIT WALL COLLISION!!");
+    //GLOG("INIT INIT INIT WALL COLLISION!!");
     return true;
 }
 
 void WallCollision::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
 {
 
-    GLOG("WallCollision: Something hit the wall - %s", otherObject->GetName().c_str());
+    //GLOG("WallCollision: Something hit the wall - %s", otherObject->GetName().c_str());
 
     ScriptComponent* scriptComp = otherObject->GetComponent<ScriptComponent*>();
     if (!scriptComp)
@@ -34,6 +34,6 @@ void WallCollision::OnCollision(GameObject* otherObject, const float3 collisionN
         return;
     }
 
-    GLOG("Wall detected projectile collision!");
+    //GLOG("Wall detected projectile collision!");
     projectile->OnWallHit();
 }

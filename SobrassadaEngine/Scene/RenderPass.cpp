@@ -42,11 +42,22 @@ RenderPass::RenderPass()
     vertexOffsetMeshesToRender.reserve(200);
     spotToRender.reserve(TotalShadowMaps);
 
-    glGenBuffers(1, &depthReadPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, sizeof(float) * 4, nullptr, GL_STREAM_READ);
+    glGenBuffers(2, depthReadPBO);
+    for (int i = 0; i < 2; ++i)
+    {
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[i]);
+        glBufferStorage(
+            GL_PIXEL_PACK_BUFFER, 4 * sizeof(float), nullptr,
+            GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+        );
+        mappedPBO[i] = (float*)glMapBufferRange(
+            GL_PIXEL_PACK_BUFFER, 0, 4 * sizeof(float), GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT
+        );
+    }
+
+    glGenBuffers(1, &shadowUBO);
+
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-    depthPBOInitialized = true;
 
     glGenFramebuffers(1, &depthFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
@@ -129,7 +140,19 @@ RenderPass::RenderPass()
 
 RenderPass::~RenderPass()
 {
+    for (int i = 0; i < 2; ++i)
+    {
+        if (mappedPBO[i])
+        {
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[i]);
+            glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+            mappedPBO[i] = nullptr;
+        }
+    }
+    glDeleteBuffers(2, depthReadPBO);
+
     glDeleteBuffers(1, &visibleLightIndicesSSBO);
+    glDeleteBuffers(1, &spotShadowSSBO);
     // glDeleteBuffers(1, &visibleVolumetricAreaIndicesSSBO);
 
     glDeleteBuffers(1, &decalVBO);
@@ -148,7 +171,14 @@ RenderPass::~RenderPass()
         glMakeTextureHandleNonResidentARB(spotShadowMapsGPU[i]);
     }
 
+    for (unsigned int tex : reductionTextures)
+    {
+        glDeleteTextures(1, &tex);
+    }
+    reductionTextures.clear();
+
     glDeleteTextures(TotalShadowMaps, &spotShadowMaps[0]);
+    glDeleteBuffers(1, &shadowUBO);
 
     if (noiseTexture) App->GetResourcesModule()->ReleaseResource(noiseTexture);
 
@@ -240,7 +270,7 @@ void RenderPass::RenderScene(
     shadersToRender.clear();
     trailsToRender.clear();
     spotToRender.clear();
-    
+
     for (const auto& gameObject : objectsToRender)
     {
         // Meshes
@@ -281,17 +311,16 @@ void RenderPass::RenderScene(
             }
         }
 
-        // Spot lights
-
+        // Spot Lights
         SpotLightComponent* spot = gameObject->GetComponent<SpotLightComponent*>();
         if (spot && spot->GetRenderVolumetric()) spotToRender.push_back(spot);
     }
 
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Video Render", Optick::Category::Rendering)
-#endif
     if (videosToRender.size() != 0)
     {
+#ifdef OPTICK
+        OPTICK_PUSH("RenderPass::Video Render")
+#endif
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Video Pass");
         gbuffer->Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -338,11 +367,14 @@ void RenderPass::RenderScene(
 #endif
 
         glPopDebugGroup();
+#ifdef OPTICK
+        OPTICK_POP();
+#endif
         return;
     }
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Geometry PASS", Optick::Category::Rendering)
+    OPTICK_PUSH("RenderPass::Geometry PASS")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Pass");
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
@@ -351,7 +383,8 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Geometry Shaders", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Geometry Shaders")
 #endif
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Geometry Custom Shaders Pass");
@@ -359,7 +392,8 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::ShadowMap")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "ShadowMap Pass");
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
@@ -369,7 +403,8 @@ void RenderPass::RenderScene(
     glViewport(0, 0, width, height);
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Decals", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Decals")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Decals Pass");
     DecalsPassRender(camera);
@@ -398,7 +433,8 @@ void RenderPass::RenderScene(
     }
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::SSAO PASS", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::SSAO PASS")
 #endif
 
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "SSAO Pass");
@@ -410,14 +446,16 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Tile Compute", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Tile Compute")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Tile Shading");
     TileShadingPass(camera, gbuffer, framebuffer);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::LightPass", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::LightPass")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Lighting Pass");
     LightingPassRender(camera, gbuffer, framebuffer);
@@ -428,7 +466,8 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::Render_TransparentPass", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::Render_TransparentPass")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Transparent Pass");
     TransparentPassRender(objectsToRender, camera);
@@ -439,21 +478,24 @@ void RenderPass::RenderScene(
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::VolumetricRender", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::VolumetricRender")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Volumetric Fog Pass");
     VolumetricFogPassRender(camera, light);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::PostLightingShaders", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::PostLightingShaders")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Post Lighting Custom Shaders Pass");
     App->GetShaderScriptModule()->RenderPostLightingPassShaders(deltaTime, camera, shadersToRender);
     glPopDebugGroup();
 
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::GameObject::Render_Billboards", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::GameObject::Render_Billboards")
 #endif
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Billboard Pass");
     glEnable(GL_BLEND);
@@ -476,6 +518,10 @@ void RenderPass::RenderScene(
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "FXAA Antialiasing Pass");
     AntiAliasingPassRender(framebuffer);
     glPopDebugGroup();
+
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
 
     batchManager->SwapBuffers();
 }
@@ -536,20 +582,98 @@ void RenderPass::NavMeshPassRender(const std::vector<GameObject*>& objectsToRend
     glEnable(GL_BLEND);
 }
 
-void CreateDepthReductionTexture(unsigned int& texture, int width, int height)
+void RenderPass::DepthReduction(unsigned int depthTexture, int gBufferwidth, int gBufferheight)
 {
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    static struct
+    {
+        GLint inSize     = -1;
+        bool initialized = false;
+    } uniforms;
 
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
+    if (lastReductionSize[0] != gBufferwidth && lastReductionSize[1] != gBufferheight)
+    {
+        int w = gBufferwidth;
+        int h = gBufferheight;
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        for (unsigned int tex : reductionTextures)
+        {
+            glDeleteTextures(1, &tex);
+        }
+        reductionSizes.clear();
+        reductionTextures.clear();
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        while (w > 1 || h > 1)
+        {
+            int groupsX = (w + 7) / 8;
+            int groupsY = (h + 3) / 4;
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+            unsigned int tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, groupsX, groupsY);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+            reductionTextures.push_back(tex);
+            float2 reductionSize;
+            reductionSize.x = static_cast<float>(groupsX);
+            reductionSize.y = static_cast<float>(groupsY);
+            reductionSizes.push_back(reductionSize);
+
+            w = groupsX;
+            h = groupsY;
+        }
+
+        lastReductionSize[0] = gBufferwidth;
+        lastReductionSize[1] = gBufferheight;
+    }
+
+    // Compute shader to find min/max values
+    unsigned int currentInput          = depthTexture;
+
+    int currentWidth                   = gBufferwidth;
+    int currentHeight                  = gBufferheight;
+
+    unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
+    glUseProgram(depthReductionProgram);
+
+    if (!uniforms.initialized)
+    {
+        uniforms.inSize      = glGetUniformLocation(depthReductionProgram, "inSize");
+        uniforms.initialized = true;
+    }
+
+    for (size_t i = 0; i < reductionTextures.size(); ++i)
+    {
+        unsigned int currentOutput = reductionTextures[i];
+        int groupsX                = reductionSizes[i].x;
+        int groupsY                = reductionSizes[i].y;
+
+        glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        glBindTextureUnit(0, currentInput);
+        glUniform2i(uniforms.inSize, currentWidth, currentHeight);
+
+        glDispatchCompute(groupsX, groupsY, 1);
+        // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+        currentInput  = currentOutput;
+        currentWidth  = groupsX;
+        currentHeight = groupsY;
+    }
+
+    int writePBOIndex = 1 - currentPBOIndex;
+
+    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[writePBOIndex]);
+    glBindTexture(GL_TEXTURE_2D, currentInput);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0); // offset 0 en el PBO
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    currentPBOIndex = writePBOIndex;
 }
 
 void RenderPass::ShadowMapPassRender(
@@ -558,103 +682,39 @@ void RenderPass::ShadowMapPassRender(
 {
     if (light == nullptr) return;
 
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
-    float* ptr = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-    if (ptr)
+    glEnable(GL_DEPTH_CLAMP);
+
+#ifdef OPTICK
+    OPTICK_PUSH("RenderPass::ShadowMap::Directional")
+#endif
+    int readPBOIndex = 1 - currentPBOIndex;
+
+    if (mappedPBO[readPBOIndex])
     {
-        lastFrameMinDepth = ptr[0];
-        lastFrameMaxDepth = ptr[1];
-        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        lastFrameMinDepth = mappedPBO[readPBOIndex][0];
+        lastFrameMaxDepth = mappedPBO[readPBOIndex][1];
     }
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    // glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO[readPBOIndex]);
+    // float* ptr = (float*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+    // if (ptr)
+    //{
+    //     lastFrameMinDepth = ptr[0];
+    //     lastFrameMaxDepth = ptr[1];
+    //     glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    // }
+    // glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
 #ifdef OPTICK
     OPTICK_PUSH("RenderPass::ShadowMap::DepthReduction");
 #endif
-    // Compute shader to find min/max values
-    int gBufferwidth          = gbuffer->GetScreenWidth();
-    int gBufferheight         = gbuffer->GetScreenHeight();
-
-    unsigned int currentInput = gbuffer->GetDepthTexture();
-    unsigned int currentOutput;
-    CreateDepthReductionTexture(currentOutput, gBufferwidth, gBufferheight);
-
-    int currentWidth                   = gBufferwidth;
-    int currentHeight                  = gBufferheight;
-
-    unsigned int depthReductionProgram = App->GetShaderModule()->GetComputeShadowDepthProgram();
-    glUseProgram(depthReductionProgram);
-
-    glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-    while (currentWidth > 1 || currentHeight > 1)
-    {
-        int groupsX = (currentWidth + 7) / 8;
-        int groupsY = (currentHeight + 3) / 4;
-
-        glBindTextureUnit(0, currentInput);
-
-        glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
-
-        glDispatchCompute(groupsX, groupsY, 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-        unsigned int newTex;
-        CreateDepthReductionTexture(newTex, groupsX, groupsY);
-        glBindImageTexture(0, newTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-        if (currentInput != gbuffer->GetDepthTexture()) glDeleteTextures(1, &currentInput);
-        currentInput  = currentOutput;
-        currentOutput = newTex;
-
-        currentWidth  = groupsX;
-        currentHeight = groupsY;
-    }
-
-#ifdef OPTICK
-    OPTICK_PUSH("RenderPass::ShadowMap::DepthReductionLastPass");
-#endif
-    // Last Pass to make it 1x1
-    int groupsX = (currentWidth + 7) / 8;
-    int groupsY = (currentHeight + 3) / 4;
-
-    glBindImageTexture(0, currentOutput, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    glBindTextureUnit(0, currentInput);
-
-    glUniform2i(glGetUniformLocation(depthReductionProgram, "inSize"), currentWidth, currentHeight);
-
-    glDispatchCompute(groupsX, groupsY, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-    glBindImageTexture(0, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    float minMax[4] = {0, 0, 0, 0};
-
-#ifdef OPTICK
-    OPTICK_PUSH("RenderPass::ShadowMap::ReadingFromGPU");
-#endif
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, depthReadPBO);
-    glBindTexture(GL_TEXTURE_2D, currentOutput);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, 0); // offset 0 en el PBO
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
+    DepthReduction(gbuffer->GetDepthTexture(), gbuffer->GetScreenWidth(), gbuffer->GetScreenHeight());
 #ifdef OPTICK
     OPTICK_POP();
 #endif
 
     float minDepth = lastFrameMinDepth;
     float maxDepth = lastFrameMaxDepth;
-
-    glDeleteTextures(1, &currentInput);
-    glDeleteTextures(1, &currentOutput);
-
-#ifdef OPTICK
-    OPTICK_POP();
-    OPTICK_POP();
-#endif
-
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::ComputeShadowMap", Optick::Category::Rendering)
-#endif
 
     // Compute the near and far planes based on the min/max depth values
     float nearD;
@@ -709,7 +769,7 @@ void RenderPass::ShadowMapPassRender(
     shadowfrustum.up                 = lightUp;
     shadowfrustum.orthographicWidth  = sphereRadius * 2.0f;
     shadowfrustum.orthographicHeight = sphereRadius * 2.0f;
-    shadowfrustum.nearPlaneDistance  = 0.1f;
+    shadowfrustum.nearPlaneDistance  = 0.01f;
     shadowfrustum.farPlaneDistance   = sphereRadius * 2.0f;
 
     CameraMatrices lightmatrices;
@@ -721,9 +781,7 @@ void RenderPass::ShadowMapPassRender(
     // DebugDrawModule* debugdraw     = App->GetDebugDrawModule();
     // debugdraw->DrawFrustrum(lightProj, lightView);
 
-    unsigned int ubo               = 0;
-    glGenBuffers(1, &ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, shadowUBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -736,10 +794,8 @@ void RenderPass::ShadowMapPassRender(
     FrustumPlanes lightFrustum;
     lightFrustum.UpdateFrustumPlanes(lightView, lightProj);
 
-#ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::ShadowMapCulling", Optick::Category::Rendering)
-#endif
     std::vector<GameObject*> shadowObjectsToRender;
+
     App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
 
     for (const auto& gameObject : shadowObjectsToRender)
@@ -750,30 +806,53 @@ void RenderPass::ShadowMapPassRender(
             meshesToRender.push_back(mesh);
     }
 
-    batchManager->RenderShadowMap(meshesToRender, ubo);
+    batchManager->RenderShadowMap(meshesToRender, shadowUBO);
 
     camera == nullptr ? App->GetCameraModule()->SetNear(nearD) : camera->SetNear(nearD);
     camera == nullptr ? App->GetCameraModule()->SetFar(farD) : camera->SetFar(farD);
 
     // RENDER SPOTLIGHT SHADOWMAPS
 #ifdef OPTICK
-    OPTICK_CATEGORY("RenderPass::ShadowMap::Spotlights", Optick::Category::Rendering)
+    OPTICK_POP();
+    OPTICK_PUSH("RenderPass::ShadowMap::Spotlights")
 #endif
-
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glViewport(0, 0, SpotLightShadowMapSize, SpotLightShadowMapSize);
+    std::vector<GameObject*> shadowObjectsToRenderSpot;
 
     for (int i = 0; i < TotalShadowMaps && i < spotToRender.size(); ++i)
     {
         if (!spotToRender[i] || (spotToRender[i] && !spotToRender[i]->GetRenderVolumetric())) continue;
 
         meshesToRender.clear();
-        shadowObjectsToRender.clear();
+        shadowObjectsToRenderSpot.clear();
 
         lightFrustum.UpdateFrustumPlanes(spotToRender[i]->GetViewMatrix(), spotToRender[i]->GetProjectionMatrix());
-        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRender, lightFrustum);
+        // App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
 
-        for (const auto& gameObject : shadowObjectsToRender)
+        if (spotToRender[i]->GetStaticObjects().empty())
+        {
+            std::vector<GameObject*> staticObjects;
+            App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(staticObjects, lightFrustum, true);
+
+            std::vector<GameObject*> filteredStatics;
+            for (auto* obj : staticObjects)
+            {
+                if (obj->IsStatic())
+                {
+                    MeshComponent* mesh = obj->GetComponent<MeshComponent*>();
+                    if (mesh && mesh->GetProduceShadows()) filteredStatics.push_back(obj);
+                }
+            }
+            spotToRender[i]->SetStaticObjects(filteredStatics);
+        }
+
+        App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
+
+        const auto& staticObjs = spotToRender[i]->GetStaticObjects();
+        shadowObjectsToRenderSpot.insert(shadowObjectsToRenderSpot.end(), staticObjs.begin(), staticObjs.end());
+
+        for (const auto& gameObject : shadowObjectsToRenderSpot)
         {
             MeshComponent* mesh = gameObject->GetComponent<MeshComponent*>();
             if (mesh != nullptr && (mesh->GetEnabled() || mesh->GetUpdateShaderStorage()) &&
@@ -790,7 +869,7 @@ void RenderPass::ShadowMapPassRender(
         lightmatrices.viewMatrix       = spotToRender[i]->GetViewMatrix();
         lightmatrices.projectionMatrix = spotToRender[i]->GetProjectionMatrix();
 
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBindBuffer(GL_UNIFORM_BUFFER, shadowUBO);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(CameraMatrices), &lightmatrices, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -803,17 +882,34 @@ void RenderPass::ShadowMapPassRender(
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(SpotlightShadow) * i, sizeof(SpotlightShadow), &currentShadow);
 
-        batchManager->RenderShadowMap(meshesToRender, ubo);
+        batchManager->RenderShadowMap(meshesToRender, shadowUBO);
     }
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-
-    glDeleteBuffers(1, &ubo);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glDisable(GL_DEPTH_CLAMP);
+
+#ifdef OPTICK
+    OPTICK_POP();
+#endif
 }
 
 void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO* ssao) const
 {
+    static struct
+    {
+        GLint gPositions     = -1;
+        GLint gNormals       = -1;
+        GLint gDepth         = -1;
+        GLint noiseTexture   = -1;
+        GLint kernel_samples = -1;
+        GLint screenSize     = -1;
+        GLint bias           = -1;
+        GLint range          = -1;
+        GLuint cameraBlock   = GL_INVALID_INDEX;
+        bool initialized     = false;
+    } uniforms;
 
     ssao->Bind();
     const unsigned int program = App->GetShaderModule()->GetSsaoProgram();
@@ -823,27 +919,41 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
 
     glUseProgram(program);
 
+    if (!uniforms.initialized)
+    {
+        uniforms.gPositions     = glGetUniformLocation(program, "gPositions");
+        uniforms.gNormals       = glGetUniformLocation(program, "gNormals");
+        uniforms.gDepth         = glGetUniformLocation(program, "gDepth");
+        uniforms.noiseTexture   = glGetUniformLocation(program, "noiseTexture");
+        uniforms.kernel_samples = glGetUniformLocation(program, "kernel_samples");
+        uniforms.screenSize     = glGetUniformLocation(program, "screenSize");
+        uniforms.bias           = glGetUniformLocation(program, "bias");
+        uniforms.range          = glGetUniformLocation(program, "range");
+        uniforms.cameraBlock    = glGetUniformBlockIndex(program, "CameraMatrices");
+        uniforms.initialized    = true;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glUniform1i(glGetUniformLocation(program, "gPositions"), 0);
+    glUniform1i(uniforms.gPositions, 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "gNormals"), 1);
+    glUniform1i(uniforms.gNormals, 1);
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer->GetDepthTexture());
-    glUniform1i(glGetUniformLocation(program, "gDepth"), 2);
+    glUniform1i(uniforms.gDepth, 2);
 
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, ssao->GetNoiseTexture());
-    glUniform1i(glGetUniformLocation(program, "noiseTexture"), 3);
+    glUniform1i(uniforms.noiseTexture, 3);
 
-    glUniform3fv(glGetUniformLocation(program, "kernel_samples"), SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
+    glUniform3fv(uniforms.kernel_samples, SSAO_KERNEL_SIZE_MID, &ssao->GetKernels()[0].x);
 
-    glUniform2f(glGetUniformLocation(program, "screenSize"), (float)ssao->GetWidth(), (float)ssao->GetHeight());
-    glUniform1f(glGetUniformLocation(program, "bias"), 0.025f);
-    glUniform1f(glGetUniformLocation(program, "range"), 0.5f);
+    glUniform2f(uniforms.screenSize, (float)ssao->GetWidth(), (float)ssao->GetHeight());
+    glUniform1f(uniforms.bias, 0.025f);
+    glUniform1f(uniforms.range, 0.5f);
     unsigned int cameraUBO;
     if (camera == nullptr)
     {
@@ -854,11 +964,8 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
         cameraUBO = camera->GetUbo();
     }
 
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
+    glUniformBlockBinding(program, uniforms.cameraBlock, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -867,9 +974,23 @@ void RenderPass::SsaoPassRender(CameraComponent* camera, GBuffer* gbuffer, SSAO*
 
 void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 {
+    static struct
+    {
+        GLint horizontal = -1;
+        GLint ssaoInput  = -1;
+        bool initialized = false;
+    } uniforms;
+
     const GLuint blurShader = App->GetShaderModule()->GetSsaoBlurProgram();
 
     glUseProgram(blurShader);
+
+    if (!uniforms.initialized)
+    {
+        uniforms.horizontal  = glGetUniformLocation(blurShader, "horizontal");
+        uniforms.ssaoInput   = glGetUniformLocation(blurShader, "ssaoInput");
+        uniforms.initialized = true;
+    }
 
     for (int i = 0; i < 2; ++i)
     {
@@ -879,11 +1000,11 @@ void RenderPass::SsaoBlurPassRender(SSAO* ssao)
 
         bool horizontal = (i == 0);
 
-        glUniform1i(glGetUniformLocation(blurShader, "horizontal"), horizontal);
+        glUniform1i(uniforms.horizontal, horizontal);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, i == 0 ? ssao->GetSSAOTexture() : ssao->GetBlurTexture(0));
-        glUniform1i(glGetUniformLocation(blurShader, "ssaoInput"), 0);
+        glUniform1i(uniforms.ssaoInput, 0);
 
         App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
     }
@@ -957,14 +1078,25 @@ void RenderPass::BloomPassRender() const
     const unsigned int bloomProgram = App->GetShaderModule()->GetBloomProgram();
     glUseProgram(bloomProgram);
 
+    static struct
+    {
+        GLint bloomIntensity = -1;
+        bool initialized     = false;
+    } uniforms;
+
+    if (!uniforms.initialized)
+    {
+        uniforms.bloomIntensity = glGetUniformLocation(bloomProgram, "bloomIntensity");
+        uniforms.initialized    = true;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, framebuffer->GetColorTexture());
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, blurrTextures[!horizontal]);
 
-    GLint locIntensity = glGetUniformLocation(bloomProgram, "bloomIntensity");
-    glUniform1f(locIntensity, bloomIntensity);
+    glUniform1f(uniforms.bloomIntensity, bloomIntensity);
 
     glDepthMask(GL_FALSE);
     App->GetOpenGLModule()->DrawArrays(GL_TRIANGLES, 0, 3);
@@ -1203,12 +1335,23 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     glBlendFunc(GL_ONE, GL_ONE);
     glBlendEquation(GL_FUNC_ADD);
 
+    static struct
+    {
+        GLint u_Texture  = -1;
+        bool initialized = false;
+    } uniforms;
+
     unsigned int quadProgram = App->GetShaderModule()->GetQuadProgram();
 
     glUseProgram(quadProgram);
 
-    unsigned int loc = glGetUniformLocation(quadProgram, "u_Texture");
-    glUniform1i(loc, 0);
+    if (!uniforms.initialized)
+    {
+        uniforms.u_Texture   = glGetUniformLocation(quadProgram, "u_Texture");
+        uniforms.initialized = true;
+    }
+
+    glUniform1i(uniforms.u_Texture, 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, blurrTextures[!horizontal]);
@@ -1223,29 +1366,52 @@ void RenderPass::DecalsPassRender(CameraComponent* camera) const
 {
     if (groupedDecals.empty()) return;
 
+    static struct
+    {
+        GLint positionTex      = -1;
+        GLint normalTex        = -1;
+        GLint decalAlbedoTex   = -1;
+        GLint hasMetallic      = -1;
+        GLint decalMetallicTex = -1;
+        GLint hasNormal        = -1;
+        GLint decalNormalTex   = -1;
+        GLuint cameraBlock     = GL_INVALID_INDEX;
+        bool initialized       = false;
+    } uniforms;
+
     gbuffer->Bind();
 
     const unsigned int program = App->GetShaderModule()->GetDecalProgram();
 
     glUseProgram(program);
 
+    if (!uniforms.initialized)
+    {
+        uniforms.positionTex      = glGetUniformLocation(program, "positionTex");
+        uniforms.normalTex        = glGetUniformLocation(program, "normalTex");
+        uniforms.decalAlbedoTex   = glGetUniformLocation(program, "decalAlbedoTex");
+        uniforms.hasMetallic      = glGetUniformLocation(program, "hasMetallic");
+        uniforms.decalMetallicTex = glGetUniformLocation(program, "decalMetallicTex");
+        uniforms.hasNormal        = glGetUniformLocation(program, "hasNormal");
+        uniforms.decalNormalTex   = glGetUniformLocation(program, "decalNormalTex");
+        uniforms.cameraBlock      = glGetUniformBlockIndex(program, "CameraMatrices");
+        uniforms.initialized      = true;
+    }
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->positionTexture);
-    glUniform1i(glGetUniformLocation(program, "positionTex"), 0);
+    glUniform1i(uniforms.positionTex, 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->normalTexture);
-    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+    glUniform1i(uniforms.normalTex, 1);
 
     unsigned int cameraUBO;
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
-    glUniformBlockBinding(program, blockIdx, 0);
+    glUniformBlockBinding(program, uniforms.cameraBlock, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -1257,28 +1423,28 @@ void RenderPass::DecalsPassRender(CameraComponent* camera) const
     {
 
         const uint64_t dhandle = decals[0]->GetResourceMaterial()->GetMaterial().diffuseTex;
-        glUniformHandleui64ARB(glGetUniformLocation(program, "decalAlbedoTex"), dhandle);
+        glUniformHandleui64ARB(uniforms.decalAlbedoTex, dhandle);
 
         if (decals[0]->GetResourceMaterial()->GetMaterial().hasMetallic)
         {
-            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
+            glUniform1i(uniforms.hasMetallic, 1);
 
             const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().metallicTex;
-            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
+            glUniformHandleui64ARB(uniforms.decalMetallicTex, mhandle);
         }
         else if (decals[0]->GetResourceMaterial()->GetMaterial().hasSpecular)
         {
-            glUniform1i(glGetUniformLocation(program, "hasMetallic"), 1);
+            glUniform1i(uniforms.hasMetallic, 1);
 
             const uint64_t mhandle = decals[0]->GetResourceMaterial()->GetMaterial().specularTex;
-            glUniformHandleui64ARB(glGetUniformLocation(program, "decalMetallicTex"), mhandle);
+            glUniformHandleui64ARB(uniforms.decalMetallicTex, mhandle);
         }
-        else glUniform1i(glGetUniformLocation(program, "hasMetallic"), 0);
+        else glUniform1i(uniforms.hasMetallic, 0);
 
-        glUniform1i(glGetUniformLocation(program, "hasNormal"), decals[0]->GetResourceMaterial()->HasNormal() ? 1 : 0);
+        glUniform1i(uniforms.hasNormal, decals[0]->GetResourceMaterial()->HasNormal() ? 1 : 0);
 
         const uint64_t nhandle = decals[0]->GetResourceMaterial()->GetMaterial().normalTex;
-        glUniformHandleui64ARB(glGetUniformLocation(program, "decalNormalTex"), nhandle);
+        glUniformHandleui64ARB(uniforms.decalNormalTex, nhandle);
 
         std::vector<DecalModels> models;
         models.reserve(decals.size());
@@ -1319,6 +1485,13 @@ void RenderPass::DecalsPassRender(CameraComponent* camera) const
 
 void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Framebuffer* framebuffer)
 {
+    static struct
+    {
+        GLint screenSize   = -1;
+        GLuint cameraBlock = GL_INVALID_INDEX;
+        bool initialized   = false;
+    } uniforms;
+
     const int TILE_SIZE             = 16;
     const int MAX_LIGHTS_PER_TILE   = 250;
 
@@ -1332,7 +1505,14 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     unsigned int tileShadingProgram = App->GetShaderModule()->GetTileShadingProgram();
     glUseProgram(tileShadingProgram);
 
-    glUniform2i(glGetUniformLocation(tileShadingProgram, "screenSize"), width, height);
+    if (!uniforms.initialized)
+    {
+        uniforms.screenSize  = glGetUniformLocation(tileShadingProgram, "screenSize");
+        uniforms.cameraBlock = glGetUniformBlockIndex(tileShadingProgram, "CameraMatrices");
+        uniforms.initialized = true;
+    }
+
+    glUniform2i(uniforms.screenSize, width, height);
 
     glBindTextureUnit(0, gbuffer->GetDepthTexture());
 
@@ -1340,11 +1520,8 @@ void RenderPass::TileShadingPass(CameraComponent* camera, GBuffer* gbuffer, Fram
     if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
     else cameraUBO = camera->GetUbo();
 
-    glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
-    unsigned int blockIdx = glGetUniformBlockIndex(tileShadingProgram, "CameraMatrices");
-    glUniformBlockBinding(tileShadingProgram, blockIdx, 0);
+    glUniformBlockBinding(tileShadingProgram, uniforms.cameraBlock, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     if (visibleLightIndicesSSBO == 0 || totalSize != currentSize)
     {
@@ -1452,27 +1629,51 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
     glUseProgram(lightingPassProgram);
 
+    static struct
+    {
+        GLint viewLight      = -1;
+        GLint projLight      = -1;
+        GLint shadowTint     = -1;
+        GLint shadowStrength = -1;
+        GLint cameraPos      = -1;
+        GLint numTilesX      = -1;
+        GLint screenSize     = -1;
+        bool initialized     = false;
+    } uniforms;
+
+    if (!uniforms.initialized)
+    {
+        uniforms.viewLight      = glGetUniformLocation(lightingPassProgram, "viewLight");
+        uniforms.projLight      = glGetUniformLocation(lightingPassProgram, "projLight");
+        uniforms.shadowTint     = glGetUniformLocation(lightingPassProgram, "shadowTint");
+        uniforms.shadowStrength = glGetUniformLocation(lightingPassProgram, "shadowStrength");
+        uniforms.cameraPos      = glGetUniformLocation(lightingPassProgram, "cameraPos");
+        uniforms.numTilesX      = glGetUniformLocation(lightingPassProgram, "numTilesX");
+        uniforms.screenSize     = glGetUniformLocation(lightingPassProgram, "screenSize");
+        uniforms.initialized    = true;
+    }
+
     float3 cameraPos;
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
 
-    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "viewLight"), 1, GL_TRUE, lightView.ptr());
-    glUniformMatrix4fv(glGetUniformLocation(lightingPassProgram, "projLight"), 1, GL_TRUE, lightProj.ptr());
+    glUniformMatrix4fv(uniforms.viewLight, 1, GL_TRUE, lightView.ptr());
+    glUniformMatrix4fv(uniforms.projLight, 1, GL_TRUE, lightProj.ptr());
 
     DirectionalLightComponent* light = App->GetSceneModule()->GetScene()->GetLightsConfig()->GetDirectionalLight();
     if (light != nullptr)
     {
         float3 shadowTint = light->GetShadowTint();
-        glUniform3f(glGetUniformLocation(lightingPassProgram, "shadowTint"), shadowTint.x, shadowTint.y, shadowTint.z);
+        glUniform3f(uniforms.shadowTint, shadowTint.x, shadowTint.y, shadowTint.z);
         float shadowStrength = light->GetShadowStrength();
-        glUniform1f(glGetUniformLocation(lightingPassProgram, "shadowStrength"), shadowStrength);
+        glUniform1f(uniforms.shadowStrength, shadowStrength);
     }
 
-    glUniform3fv(glGetUniformLocation(lightingPassProgram, "cameraPos"), 1, &cameraPos[0]);
+    glUniform3fv(uniforms.cameraPos, 1, &cameraPos[0]);
 
     // Light Culling
-    glUniform1i(glGetUniformLocation(lightingPassProgram, "numTilesX"), tilesX);
-    glUniform2i(glGetUniformLocation(lightingPassProgram, "screenSize"), width, height);
+    glUniform1i(uniforms.numTilesX, tilesX);
+    glUniform2i(uniforms.screenSize, width, height);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, visibleLightIndicesSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, spotShadowSSBO);
 
@@ -1489,6 +1690,22 @@ void RenderPass::LightingPassRender(CameraComponent* camera, GBuffer* gbuffer, F
 
 void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsToRender, CameraComponent* camera) const
 {
+    static struct
+    {
+        GLint cameraPos   = -1;
+        GLint isWireframe = -1;
+        bool initialized  = false;
+    } tuniforms;
+
+    static struct
+    {
+        GLint cameraPos      = -1;
+        GLint isWireframe    = -1;
+        GLint windDirection  = -1;
+        GLint windParameters = -1;
+        bool initialized     = false;
+    } wtuniforms;
+
     Bind();
 
     glDepthMask(GL_FALSE);
@@ -1498,13 +1715,20 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 
     glUseProgram(program);
 
+    if (!tuniforms.initialized)
+    {
+        tuniforms.cameraPos   = glGetUniformLocation(program, "cameraPos");
+        tuniforms.isWireframe = glGetUniformLocation(program, "isWireframe");
+        tuniforms.initialized = true;
+    }
+
     App->GetSceneModule()->GetScene()->GetLightsConfig()->SetLightsShaderData();
 
     float3 cameraPos;
     if (camera == nullptr) cameraPos = App->GetCameraModule()->GetCameraPosition();
     else cameraPos = camera->GetCameraPosition();
 
-    glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, &cameraPos[0]);
+    glUniform3fv(tuniforms.cameraPos, 1, &cameraPos[0]);
 
     if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_NAVMESH_MESHES)))
     {
@@ -1522,9 +1746,9 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
             }
         }
 
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        glUniform1i(tuniforms.isWireframe, 0);
         batchManager->RenderTransparent(navmeshesToRender, program, camera);
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        glUniform1i(tuniforms.isWireframe, 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
         batchManager->RenderTransparent(nonnavmeshesToRender, program, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
@@ -1532,7 +1756,7 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 
     else if (App->GetDebugDrawModule()->GetDebugOptionValue(static_cast<int>(DebugOptions::RENDER_WIREFRAME)))
     {
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 1);
+        glUniform1i(tuniforms.isWireframe, 1);
         App->GetOpenGLModule()->SetRenderWireframe(true);
         batchManager->RenderTransparent(transparentMeshesToRender, program, camera);
         App->GetOpenGLModule()->SetRenderWireframe(false);
@@ -1540,26 +1764,32 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
 
     else
     {
-        glUniform1i(glGetUniformLocation(program, "isWireframe"), 0);
+        glUniform1i(tuniforms.isWireframe, 0);
 
         batchManager->RenderTransparent(transparentMeshesToRender, program, camera);
 
         glUseProgram(wPOProgram);
 
-        glUniform3fv(glGetUniformLocation(wPOProgram, "cameraPos"), 1, &cameraPos[0]);
-        glUniform1i(glGetUniformLocation(wPOProgram, "isWireframe"), 0);
+        if (!wtuniforms.initialized)
+        {
+            wtuniforms.cameraPos      = glGetUniformLocation(wPOProgram, "cameraPos");
+            wtuniforms.isWireframe    = glGetUniformLocation(wPOProgram, "isWireframe");
+            wtuniforms.windDirection  = glGetUniformLocation(wPOProgram, "windDirection");
+            wtuniforms.windParameters = glGetUniformLocation(wPOProgram, "windParameters");
+            wtuniforms.initialized    = true;
+        }
+
+        glUniform3fv(wtuniforms.cameraPos, 1, &cameraPos[0]);
+        glUniform1i(wtuniforms.isWireframe, 0);
 
         WindConfig* windConfig = App->GetSceneModule()->GetScene()->GetWindsConfig();
         if (windConfig->GetApplyWindGlobally() && !vertexOffsetMeshesToRender.empty())
         {
             const Quat windDirection = Quat::FromEulerXYZ(0, windConfig->GetWindDirection() * DEGREE_RAD_CONV, 0);
+            glUniform4f(wtuniforms.windDirection, windDirection.x, windDirection.y, windDirection.z, windDirection.w);
             glUniform4f(
-                glGetUniformLocation(wPOProgram, "windDirection"), windDirection.x, windDirection.y, windDirection.z,
-                windDirection.w
-            );
-            glUniform4f(
-                glGetUniformLocation(wPOProgram, "windParameters"), App->GetEngineTimer()->GetTime(),
-                windConfig->GetWindSpeed(), std::max(1.f, windConfig->GetGustFrequency()), windConfig->GetGustSpeed()
+                wtuniforms.windParameters, App->GetEngineTimer()->GetTime(), windConfig->GetWindSpeed(),
+                std::max(1.f, windConfig->GetGustFrequency()), windConfig->GetGustSpeed()
             );
         }
         batchManager->RenderTransparent(vertexOffsetMeshesToRender, wPOProgram, camera);
@@ -1570,18 +1800,33 @@ void RenderPass::TransparentPassRender(const std::vector<GameObject*>& objectsTo
         glDisable(GL_CULL_FACE);
         glDepthMask(GL_FALSE);
 
+        static struct
+        {
+            GLuint cameraBlock = GL_INVALID_INDEX;
+            bool initialized   = false;
+        } trailUniforms;
+
         const unsigned int program = App->GetShaderModule()->GetTrailProgram();
         glUseProgram(program);
+
+        if (!trailUniforms.initialized)
+        {
+            trailUniforms.cameraBlock = glGetUniformBlockIndex(program, "CameraMatrices");
+            trailUniforms.initialized = true;
+        }
 
         unsigned int cameraUBO;
         if (camera == nullptr) cameraUBO = App->GetCameraModule()->GetUbo();
         else cameraUBO = camera->GetUbo();
 
-        glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
+        /*glBindBuffer(GL_UNIFORM_BUFFER, cameraUBO);
         unsigned int blockIdx = glGetUniformBlockIndex(program, "CameraMatrices");
         glUniformBlockBinding(program, blockIdx, 0);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);*/
+
+        glUniformBlockBinding(program, trailUniforms.cameraBlock, 0);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, cameraUBO);
 
         for (const auto& trail : trailsToRender)
             trail->Render(0, nullptr);

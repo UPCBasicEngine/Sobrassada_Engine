@@ -658,7 +658,7 @@ void CharacterControllerComponent::CheckDashObstacles()
     {
         if (centralHit)
         {
-            GLOG("HIT IN CENTRAL WITH: %s", centralHit->GetName().c_str());
+            //GLOG("HIT IN CENTRAL WITH: %s", centralHit->GetName().c_str());
             const AABB& box = centralHit->GetGlobalAABB();
             if (box.Intersects(centralRay, tNear, tFar))
             {
@@ -678,7 +678,7 @@ void CharacterControllerComponent::CheckDashObstacles()
 
         if (rightHit)
         {
-            GLOG("HIT IN RIGHT WITH: %s", rightHit->GetName().c_str());
+            //GLOG("HIT IN RIGHT WITH: %s", rightHit->GetName().c_str());
             const AABB& box = rightHit->GetGlobalAABB();
             if (box.Intersects(rightRay, tNear, tFar))
             {
@@ -698,7 +698,7 @@ void CharacterControllerComponent::CheckDashObstacles()
 
         if (leftHit)
         {
-            GLOG("HIT IN LEFT WITH: %s", leftHit->GetName().c_str());
+            //GLOG("HIT IN LEFT WITH: %s", leftHit->GetName().c_str());
             const AABB& box = leftHit->GetGlobalAABB();
             if (box.Intersects(leftRay, tNear, tFar))
             {

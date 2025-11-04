@@ -171,6 +171,7 @@ class SOBRASADA_API_ENGINE GameObject
 
     void ParentUpdatedComponents();
     void OnTransformUpdated();
+    void UpdateBonesTransform();
     void SetPosition(float3& newPosition) { position = newPosition; };
     void SetWillUpdate(bool willUpdate) { this->willUpdate = willUpdate; };
     bool IsEnabled() const { return enabled; }
