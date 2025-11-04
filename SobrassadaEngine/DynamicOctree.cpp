@@ -191,7 +191,7 @@ bool DynamicOctree::RemoveElement(GameObject* gameObject, bool goTransformed)
         if (currentNode && currentNode->RemoveElement(octreeElement))
         {
             removed = true;
-
+            --totalElements;
             if (currentNode->elements.size() <= currentNode->elementsCapacity)
                 nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
             else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
