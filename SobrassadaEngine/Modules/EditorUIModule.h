@@ -105,6 +105,7 @@ class EditorUIModule : public Module
     SOBRASADA_API_ENGINE void ToggleVSync();
 
     void Console(bool& consoleMenu) const;
+    void LoadDialog(bool& load, bool forceReload = false, bool switchPlayMode = false);
   private:
     void RenderBasicTransformModifiers(
         float3& outputPosition, float3& outputRotation, float3& outputScale, bool& lockScaleAxis,
@@ -132,7 +133,6 @@ class EditorUIModule : public Module
     void ShowCaps() const;
 
     void ImportDialog(bool& import);
-    void LoadDialog(bool& load);
     void LoadModelDialog(bool& loadModel);
     void LoadPrefabDialog(bool& loadPrefab);
     void SaveDialog(bool& save);

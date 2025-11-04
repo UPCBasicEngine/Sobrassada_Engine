@@ -245,15 +245,15 @@ bool FireballTrap::Init()
         vfxIndicator = CloneHierarchy(vfxIndicatorPrefab, parent->GetUID());
         vfxIndicator->SetEnabled(false);
         vfxIndicatorMeshes = vfxIndicator->GetAllComponentsInChilds<MeshComponent*>(AppEngine);
-        GLOG("[INIT] Found %zu meshes in Indicator VFX", vfxIndicatorMeshes.size());
+        //GLOG("[INIT] Found %zu meshes in Indicator VFX", vfxIndicatorMeshes.size());
         for (size_t i = 0; i < vfxIndicatorMeshes.size(); ++i)
         {
             auto* mc = vfxIndicatorMeshes[i];
             mc->SetEnabled(false);
-            GLOG(
+            /*GLOG(
                 "[INIT] Indicator Mesh[%zu] disabled, parent: %s", i,
                 mc->GetParent() ? mc->GetParent()->GetName().c_str() : "null"
-            );
+            );*/
         }
     }
 
@@ -1141,13 +1141,13 @@ bool FireballTrap::InitAnimation(OneShotAnim& anim, GameObject* prefab, const st
         if (!v.empty())
         {
             anim.ac = v.front();
-            GLOG("[INFO] Found animation component in child for %s", name.c_str());
+            //GLOG("[INFO] Found animation component in child for %s", name.c_str());
         }
     }
 
     if (anim.ac)
     {
-        GLOG("[INFO] Animation component ready for %s, resource: %llu", name.c_str(), anim.ac->GetAnimationResource());
+        //GLOG("[INFO] Animation component ready for %s, resource: %llu", name.c_str(), anim.ac->GetAnimationResource());
         if (!anim.ac->GetCurrentAnimation())
         {
             anim.ac->Init();

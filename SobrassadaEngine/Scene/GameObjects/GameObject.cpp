@@ -8,6 +8,7 @@
 #include "SceneModule.h"
 
 #include "CameraComponent.h"
+#include "DynamicOctree.h"
 #include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
@@ -269,6 +270,8 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
     DuplicateComponents(compTuple, refObject->GetComponentsTupleRef());
 
     OnAABBUpdated();
+
+    if (mobilitySettings == DYNAMIC) App->GetSceneModule()->GetScene()->GetDynamicOctree()->InsertElement(this);
 }
 
 GameObject::GameObject(const rapidjson::Value& initialState) : uid(initialState["UID"].GetUint64())
@@ -283,6 +286,10 @@ GameObject::~GameObject()
     {
         App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
     }
+
+    App->GetSceneModule()->GetScene()->RemoveTransformUpdatedGameObject(this);
+
+    if (dynamicNode) App->GetSceneModule()->GetScene()->GetDynamicOctree()->RemoveElement(this, true);
 
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
 }
@@ -796,7 +803,12 @@ void GameObject::OnTransformUpdated()
     if (transform2D) transform2D->OnTransform3DUpdated(globalTransform);
 
     if (mobilitySettings == STATIC) App->GetSceneModule()->GetScene()->SetStaticModified();
-    else App->GetSceneModule()->GetScene()->SetDynamicModified();
+    else
+    {
+        App->GetSceneModule()->GetScene()->SetDynamicModified();
+        if (!globalAABB.IsDegenerate() && globalAABB.IsFinite() && !globalAABB.Size().IsZero())
+            App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
+    }
 }
 
 void GameObject::UpdateBonesTransform()
@@ -1514,7 +1526,7 @@ void GameObject::SetEnabledRecursive(bool value)
             child->SetEnabledRecursive(value);
 }
 
-GameObject* GameObject::GetChildGameObjectByName(const std::string& name) 
+GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
 {
     std::stack<UID> nodesToVisit;
     for (UID childUID : children)
@@ -1531,7 +1543,7 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         if (!current) continue;
 
         // GLOG("GameObject %s", current->GetName().c_str());
-        if (current->GetName() == name) return current;
+        if (HashString(current->GetName()) == HashString(name)) return current;
 
         for (UID grandChildUID : current->children)
         {
@@ -1539,6 +1551,6 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         }
     }
 
-    GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }

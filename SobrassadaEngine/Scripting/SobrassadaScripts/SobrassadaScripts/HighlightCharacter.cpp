@@ -35,6 +35,8 @@ HighlightCharacter::HighlightCharacter(GameObject* parent) : Script(parent)
         "Target spline points offset", InspectorField::FieldType::Float, &secondSplinePointOffset, 0.0f, 10.0f
     );
     fields.emplace_back("Zoom multiplier", InspectorField::FieldType::Float, &zoomMultiplier, 0.1f, 50.0f);
+    
+    fields.emplace_back("No reset player State", InspectorField::FieldType::Bool, &noResetState);
 }
 
 bool HighlightCharacter::Init()
@@ -135,6 +137,13 @@ bool HighlightCharacter::Init()
         return false;
     }
 
+    cuPlayer = player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>();
+    if (cuPlayer == nullptr)
+    {
+        isSetupCorrectly = false;
+        GLOG("[WARNING] HighlightCharacter: CuChulainn player go doesn´t contain name CuChulainn script")
+        return false;
+    }
     return true;
 }
 
@@ -146,6 +155,9 @@ void HighlightCharacter::Update(float deltaTime)
         splineMovementTarget->SetEnabled(false);
         cameraMovementScript->ResetToDefaultTargetAndLookAhead();
         playerController->SetInputDown(true);
+        playerController->EnableMovement(true);
+        cuPlayer->SethighlightIdleState(false);
+
     }
 }
 
@@ -192,8 +204,7 @@ void HighlightCharacter::OnCollisionEnter(GameObject* otherObject, const float3 
         }
 
         playerController->SetInputDown(false);
-        if (player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>())
-            player->GetComponent<ScriptComponent*>()->GetScriptByType<CuChulainn>()->ResetState();
+        if (cuPlayer && !noResetState) cuPlayer->SethighlightIdleState(true);
 
         const float3 highlightVector =
             (highlightFocusObject->GetGlobalTransform().TranslatePart() - parent->GetGlobalTransform().TranslatePart())

@@ -440,6 +440,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="DynamicOctree.cpp" />
     <ClCompile Include="Scene\Components\Standalone\Animation\AnimationTrigger.cpp" />
     <ClCompile Include="Libs\ImGui\imgui_curve_editor.cpp" />
     <ClCompile Include="Scene\Components\Standalone\VideoComponent.cpp" />
@@ -709,6 +710,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="DynamicOctree.h" />
     <ClInclude Include="Scene\Components\Standalone\Animation\AnimationTrigger.h" />
     <ClInclude Include="Libs\ImGui\imgui_curve_editor.h" />
     <ClInclude Include="Scene\Components\Standalone\Animation\TriggerType.h" />

@@ -130,15 +130,15 @@ void MirageBossDash::StartDash()
     dashDistance   = (dashEnd - bossPos).Length();
     dashDirection  = (dashEnd - bossPos).Normalized();
 
-    GLOG("Distance: %.2f", dashDistance);
-    GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
+    //GLOG("Distance: %.2f", dashDistance);
+    //GLOG("Direction: %.2f %.2f %.2f", dashDirection.x, dashDirection.y, dashDirection.z);
 
     dashSpeed         = dashDistance / dashDuration;
     dashTimeRemaining = dashDuration;
 
     dashStartPosLocal = parent->GetLocalTransform().TranslatePart();
 
-    GLOG("Speed: %.2f", dashSpeed);
+    //GLOG("Speed: %.2f", dashSpeed);
 }
 
 void MirageBossDash::Dash(float deltaTime)
@@ -155,7 +155,7 @@ void MirageBossDash::Dash(float deltaTime)
     float3 newPos           = dashStartPosLocal + float3(horizontalOffset.x, 0.0f, horizontalOffset.z);
     newPos.y                = originalY;
 
-    GLOG("Dash pos: %.2f %.2f %.2f", newPos.x, newPos.y, newPos.z);
+    //GLOG("Dash pos: %.2f %.2f %.2f", newPos.x, newPos.y, newPos.z);
 
     parent->SetLocalPosition(newPos);
 

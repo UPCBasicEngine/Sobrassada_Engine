@@ -72,6 +72,7 @@ class Character : public Script
     GameObject* GetGlowEffect() { return glow; }
     GameObject* GetHitEffect() { return hit; }
     virtual void Die();
+    void InitializeSecondaryMeshes();
 
   private:
     virtual void HandleState(float deltaTime) {};

@@ -231,7 +231,7 @@ bool LibraryModule::LoadLibraryMaps(const std::string& projectPath)
                 else NavmeshImporter::CopyNavmesh(assetPath, projectPath, libraryPath, assetUID);
                 break;
             default:
-                GLOG("Unknown UID prefix (%s) for: %s", std::to_string(prefix).c_str(), assetName.c_str());
+                //GLOG("Unknown UID prefix (%s) for: %s", std::to_string(prefix).c_str(), assetName.c_str());
                 continue;
             }
         }

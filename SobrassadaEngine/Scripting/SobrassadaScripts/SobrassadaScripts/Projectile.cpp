@@ -70,7 +70,7 @@ bool Projectile::Init()
             spritesheetV = shader->GetScriptByType<AttackVfxSpritesheet>();
         }
     }
-    if (!spritesheetV) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
+    //if (!spritesheetV) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
 
     spritesheetObject = parent->GetChildGameObjectByName(spritesheetNameH);
     if (spritesheetObject)
@@ -84,7 +84,7 @@ bool Projectile::Init()
             spritesheetH = shader->GetScriptByType<AttackVfxSpritesheet>();
         }
     }
-    if (!spritesheetH) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
+    //if (!spritesheetH) GLOG("[WARNING: Projectile Init()] Couldn't find the spritesheet component");
 
     particles = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(particlesName);
     if (!particles) GLOG("[WARNING: Projectile Init()] Couldn't find the particles component");

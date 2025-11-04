@@ -41,7 +41,7 @@ bool GameOverNavigatorScript::Init()
     stickPrev                   = 0;
 
     audio                       = parent->GetComponent<AudioSourceComponent*>();
-    if (!audio) GLOG("[WARNING] GameOverNavigatorScript: No audio component found");
+    //if (!audio) GLOG("[WARNING] GameOverNavigatorScript: No audio component found");
 
     return true;
 }

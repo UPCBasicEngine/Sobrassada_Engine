@@ -56,7 +56,7 @@ bool Archer::Init()
 
     if (allCoverPoints && !allCoverPoints->empty())
     {
-        GLOG("INIT: Found %d cover points in scene", allCoverPoints->size());
+        //GLOG("INIT: Found %d cover points in scene", allCoverPoints->size());
 
         availableCoverPoints.clear(); 
 
@@ -65,15 +65,15 @@ bool Archer::Init()
             if (coverPoint && coverPoint->IsEnabled())
             {
                 availableCoverPoints.push_back(coverPoint);
-                GLOG("INIT: Added cover point: %s", coverPoint->GetName().c_str());
+                //GLOG("INIT: Added cover point: %s", coverPoint->GetName().c_str());
             }
         }
 
-        GLOG("INIT: Total available cover points: %d", availableCoverPoints.size());
+        //GLOG("INIT: Total available cover points: %d", availableCoverPoints.size());
     }
     else
     {
-        GLOG("[WARNING] INIT: No cover points found in scene!");
+        //GLOG("[WARNING] INIT: No cover points found in scene!");
     }
 
     agentAI = parent->GetComponent<AIAgentComponent*>();
@@ -121,11 +121,11 @@ bool Archer::Init()
    if (glowVfxObject)
     {
        
-        GLOG("VFX: Found VFX Glow object!");
-        GLOG("VFX: Successfully found Glow VFX object as sibling");
+        //GLOG("VFX: Found VFX Glow object!");
+        //GLOG("VFX: Successfully found Glow VFX object as sibling");
         ParticleSystemComponent* particleSystem = glowVfxObject->GetComponent<ParticleSystemComponent*>();
         if (!particleSystem) GLOG("[WARNING] VFX object has no ParticleSystemComponent");
-        GLOG("VFX: ParticleSystemComponent found");
+        //GLOG("VFX: ParticleSystemComponent found");
         glowVfxObject->SetEnabled(false);
         glowVfxIsActive = false;
         glowTimer       = 0.0f;
@@ -135,11 +135,11 @@ bool Archer::Init()
     if (hitVfxObject)
     {
 
-        GLOG("VFX: Found VFX Hit object!");
-        GLOG("VFX: Successfully found Hit VFX object as sibling");
+        //GLOG("VFX: Found VFX Hit object!");
+        //GLOG("VFX: Successfully found Hit VFX object as sibling");
         ParticleSystemComponent* particleSystem = hitVfxObject->GetComponent<ParticleSystemComponent*>();
         if (!particleSystem) GLOG("[WARNING] VFX object has no ParticleSystemComponent");
-        GLOG("VFX: ParticleSystemComponent found");
+        //GLOG("VFX: ParticleSystemComponent found");
         hitVfxObject->SetEnabled(false);
         hitVfxIsActive = false;
         hitVfxTimer       = 0.0f;
@@ -189,7 +189,7 @@ void Archer::Update(float deltaTime)
         if (deathTimer >= DEATH_DURATION)
         {
             parent->SetEnabledRecursive(false);
-            GLOG("Archer DISAPPEARED");
+            //GLOG("Archer DISAPPEARED");
         }
 
         Character::UpdateTimers(deltaTime);
@@ -200,7 +200,7 @@ void Archer::Update(float deltaTime)
         if (playerScript && (playerScript->IsDead() || playerScript->GetState() == CharacterStates::RESPAWN))
         {
             if (animComponent) animComponent->UseTrigger("idle");
-            GLOG("UPDATE: Player dead, forcing PATROL from state: %s", GetLogicStateName().c_str());
+            //GLOG("UPDATE: Player dead, forcing PATROL from state: %s", GetLogicStateName().c_str());
 
            
             agentAI->SetSpeed(0.0f, 0.0f);
@@ -265,7 +265,7 @@ void Archer::Update(float deltaTime)
 
         if (distToPlayer <= rangeEscape)
         {
-            GLOG("EMERGENCY ESCAPE - Player too close at %.2f!", distToPlayer);
+            //GLOG("EMERGENCY ESCAPE - Player too close at %.2f!", distToPlayer);
 
             if (isAttacking)
             {
@@ -311,14 +311,14 @@ void Archer::Update(float deltaTime)
     if (hitVfxIsActive && hitVfxObject)
     {
         hitVfxTimer += deltaTime;
-        GLOG(
+        /*GLOG(
             "VFX Hit Update: Timer %.3f / %.3f, Enabled: %s", hitVfxTimer, hitVfxDuration,
             hitVfxObject->IsEnabled() ? "YES" : "NO"
-        );
+        );*/
 
         if (hitVfxTimer >= hitVfxDuration)
         {
-            GLOG("VFX Hit: Disabling after %.3f seconds", hitVfxTimer);
+            //GLOG("VFX Hit: Disabling after %.3f seconds", hitVfxTimer);
             hitVfxObject->SetEnabled(false);
             hitVfxIsActive = false;
             hitVfxTimer    = 0.0f;
@@ -328,14 +328,14 @@ void Archer::Update(float deltaTime)
     if (glowVfxIsActive && glowVfxObject)
     {
         glowTimer += deltaTime;
-        GLOG(
+        /*GLOG(
             "VFX Glow Update: Timer %.3f / %.3f, Enabled: %s", glowTimer, glowVfxDuration,
             glowVfxObject->IsEnabled() ? "YES" : "NO"
-        );
+        );*/
 
         if (glowTimer >= glowVfxDuration)
         {
-            GLOG("VFX: Glow Disabling after %.3f seconds", glowTimer);
+            //GLOG("VFX: Glow Disabling after %.3f seconds", glowTimer);
             glowVfxObject->SetEnabled(false);
             glowVfxIsActive = false;
             glowTimer       = 0.0f;
@@ -496,7 +496,7 @@ void Archer::ActivateGlowVFX()
 {
     if (!glowVfxObject)
     {
-        GLOG("VFX: ERROR - glowVfxObject is NULL!");
+        //GLOG("VFX: ERROR - glowVfxObject is NULL!");
         return;
     }
 
@@ -508,7 +508,7 @@ void Archer::ActivateGlowVFX()
     if (particleSystem)
     {
         particleSystem->SpawnAllInstances();
-        GLOG("VFX: Glow particles spawned at archer position");
+        //GLOG("VFX: Glow particles spawned at archer position");
     }
     else
     {
@@ -521,36 +521,36 @@ void Archer::ActivateHitVFX()
  
     if (hitVfxObject)
     {
-        GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
+        //GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
 
-       GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
+        //GLOG("VFX: Activating hit effect - Object found: %s", hitVfxObject->GetName().c_str());
         hitVfxTimer    = 0.0f;
         hitVfxIsActive = true;
 
        
         hitVfxObject->SetEnabled(true);
-        GLOG("VFX: Object enabled");
+        //GLOG("VFX: Object enabled");
 
         auto meshComp = hitVfxObject->GetComponent<MeshComponent*>(); 
         if (meshComp != nullptr)
         {
             meshComp->SetEnabled(false);
-            GLOG("VFX: MeshComponent disabled successfully");
+            //GLOG("VFX: MeshComponent disabled successfully");
         }
         else
         {
-            GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
+            //GLOG("VFX: WARNING - No MeshComponent found on %s", hitVfxObject->GetName().c_str());
         }
         auto shaderScriptComp = hitVfxObject->GetComponent<ShaderScriptComponent*>();
         if (shaderScriptComp != nullptr)
         {
-            GLOG("VFX: ShaderScriptComponent found");
+            //GLOG("VFX: ShaderScriptComponent found");
 
             auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
             if (attackVfxScript)
             {
                 attackVfxScript->Reset();
-                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+                //GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
             }
             else
             {
@@ -603,7 +603,7 @@ float3 Archer::CalculateSpreadPosition()
 {
     if (!character)
     {
-        GLOG("CalculateSpreadPosition: No character found");
+        //GLOG("CalculateSpreadPosition: No character found");
         return parent->GetPosition();
     }
 
@@ -611,11 +611,11 @@ float3 Archer::CalculateSpreadPosition()
     float3 archerPos                          = parent->GetPosition();
 
     std::vector<float3> nearbyArcherPositions = GetNearbyArcherPositions();
-    GLOG("CalculateSpreadPosition: Found %d nearby archers", nearbyArcherPositions.size());
+    //GLOG("CalculateSpreadPosition: Found %d nearby archers", nearbyArcherPositions.size());
 
     if (nearbyArcherPositions.empty())
     {
-        GLOG("CalculateSpreadPosition: No nearby archers, going direct to player");
+        //GLOG("CalculateSpreadPosition: No nearby archers, going direct to player");
         return playerPos;
     }
 
@@ -628,10 +628,10 @@ float3 Archer::CalculateSpreadPosition()
         float3 offset       = float3(std::cos(angle) * spreadRadius, 0.0f, std::sin(angle) * spreadRadius);
         float3 candidatePos = playerPos + offset;
 
-        GLOG(
+        /*GLOG(
             "CalculateSpreadPosition: Testing angle %d (%.1f deg), position (%.2f, %.2f, %.2f)", i,
             angle * 180.0f / 3.14159f, candidatePos.x, candidatePos.y, candidatePos.z
-        );
+        );*/
 
         bool positionFree = true;
         for (const float3& otherPos : nearbyArcherPositions)
@@ -639,7 +639,7 @@ float3 Archer::CalculateSpreadPosition()
             float distToOther = candidatePos.Distance(otherPos);
             if (distToOther < 3.0f)
             {
-                GLOG("CalculateSpreadPosition: Position blocked by archer at distance %.2f", distToOther);
+                //GLOG("CalculateSpreadPosition: Position blocked by archer at distance %.2f", distToOther);
                 positionFree = false;
                 break;
             }
@@ -657,10 +657,10 @@ float3 Archer::CalculateSpreadPosition()
 
                 if (posOverPoly)
                 {
-                    GLOG(
+                    /*GLOG(
                         "CalculateSpreadPosition: SUCCESS! Using spread position (%.2f, %.2f, %.2f)", navPosition.x,
                         navPosition.y, navPosition.z
-                    );
+                    );*/
                     return navPosition;
                 }
                 else
@@ -671,7 +671,7 @@ float3 Archer::CalculateSpreadPosition()
         }
     }
 
-    GLOG("CalculateSpreadPosition: No spread position found, trying closer positions");
+    //GLOG("CalculateSpreadPosition: No spread position found, trying closer positions");
 
     float closerRadius = 2.0f;
     for (int i = 0; i < 12; i++)
@@ -690,10 +690,10 @@ float3 Archer::CalculateSpreadPosition()
 
             if (posOverPoly)
             {
-                GLOG(
+                /*GLOG(
                     "CalculateSpreadPosition: Using closer spread position (%.2f, %.2f, %.2f)", navPosition.x,
                     navPosition.y, navPosition.z
-                );
+                );*/
                 return navPosition;
             }
         }
@@ -760,7 +760,7 @@ void Archer::PlayHighlightSequence()
     {
         if (currentState == ArcherStates::PATROL)
         {
-            GLOG("Starting highlight sequence");
+            //GLOG("Starting highlight sequence");
             currentState             = ArcherStates::HIGHLIGHTING;
             currentHighlightingState = ArcherHighlightingStates::IDLE;
         }
@@ -809,7 +809,7 @@ void Archer::UpdateHighlightState(float deltaTime)
 
             if (currentStateTime < 0.1f)
             {
-                GLOG("ENTER ATTACK STATE");
+                //GLOG("ENTER ATTACK STATE");
                 animComponent->UseTrigger("attack");
             }
             else if (currentStateTime > 1.0f)
@@ -828,7 +828,7 @@ void Archer::UpdateHighlightState(float deltaTime)
             break;
 
         case ArcherHighlightingStates::DONE:
-            GLOG("ENTER DONE STATE");
+            //GLOG("ENTER DONE STATE");
             animComponent->UseTrigger("idle");
             currentHighlightingState = ArcherHighlightingStates::IDLE;
             currentState             = ArcherStates::PATROL;
@@ -932,7 +932,7 @@ void Archer::OverShooting(float deltaTime)
         hasStartedShooting = false;
         currentArrowIndex  = 0;
 
-        GLOG("OVERSHOOTING STARTED - Pool: %d, Target: %d", arrowPool.size(), numberOfShoots);
+        //GLOG("OVERSHOOTING STARTED - Pool: %d, Target: %d", arrowPool.size(), numberOfShoots);
     }
     else
     {
@@ -944,7 +944,7 @@ void Archer::OverShooting(float deltaTime)
             hasStartedShooting = true;
             currentShot        = 0;
             shotTimer          = 0.0f;
-            GLOG("OVERSHOOTING - MACHINE GUN SEQUENCE STARTED!");
+            //GLOG("OVERSHOOTING - MACHINE GUN SEQUENCE STARTED!");
         }
 
         if (hasStartedShooting && currentShot < numberOfShoots)
@@ -955,7 +955,7 @@ void Archer::OverShooting(float deltaTime)
             {
                 if (arrowPool.empty())
                 {
-                    GLOG("[ERROR] Arrow pool is empty!");
+                    //GLOG("[ERROR] Arrow pool is empty!");
                     isAttacking        = false;
                     hasStartedShooting = false;
                     ChangeState();
@@ -1055,7 +1055,7 @@ void Archer::HandleState(float deltaTime)
         DangerRetreat(deltaTime);
         break;
     case ArcherStates::HIGHLIGHTING:
-        GLOG("FRAME: HIGHLIGHTING update called");
+        //GLOG("FRAME: HIGHLIGHTING update called");
         UpdateHighlightState(deltaTime);
         if (currentHighlightingState == ArcherHighlightingStates::DONE)
         {
@@ -1072,7 +1072,7 @@ void Archer::HandleState(float deltaTime)
         }
         break;
     default:
-        GLOG("No state provided to Archer");
+        //GLOG("No state provided to Archer");
         currentState = ArcherStates::PATROL;
         break;
     }
@@ -1102,7 +1102,7 @@ void Archer::PatrolAI()
             {
                 if (currentHighlightingState == ArcherHighlightingStates::IDLE)
                 {
-                    GLOG("STATIC PATROL -> HIGHLIGHTING: Player detected at distance %.2f", distance);
+                    //GLOG("STATIC PATROL -> HIGHLIGHTING: Player detected at distance %.2f", distance);
                     PlayHighlightSequence();
                     return;
                 }
@@ -1114,7 +1114,7 @@ void Archer::PatrolAI()
             {
                 if (currentHighlightingState == ArcherHighlightingStates::IDLE)
                 {
-                    GLOG("MOBILE PATROL -> HIGHLIGHTING: Player detected at distance %.2f", distance);
+                    //GLOG("MOBILE PATROL -> HIGHLIGHTING: Player detected at distance %.2f", distance);
                     PlayHighlightSequence();
                     return;
                 }
@@ -1128,7 +1128,7 @@ void Archer::PatrolAI()
 
                 if (distance <= rangeAIChase)
                 {
-                    GLOG("PATROL -> CHASE: Player detected at distance %.2f", distance);
+                    //GLOG("PATROL -> CHASE: Player detected at distance %.2f", distance);
                     currentState = ArcherStates::CHASE;
                     agentAI->ResetSpeed();
                     return;
@@ -1281,14 +1281,14 @@ void Archer::DangerRetreat(float deltaTime)
 
             if (dangerStuckTimer >= 0.5f) 
             {
-                GLOG("DANGER: Stuck! Finding new escape point");
+                //GLOG("DANGER: Stuck! Finding new escape point");
                 hasDangerTarget  = false;
                 dangerStuckTimer = 0.0f;
 
                 
                 if (distToPlayer >= 6.0f)
                 {
-                    GLOG("DANGER: Stuck but safe distance (%.2f), staying here", distToPlayer);
+                    //GLOG("DANGER: Stuck but safe distance (%.2f), staying here", distToPlayer);
                     agentAI->SetSpeed(0.0f, 0.0f);
                     return;
                 }
@@ -1337,7 +1337,7 @@ void Archer::DangerRetreat(float deltaTime)
                 dangerEscapeTarget = navPos;
                 hasDangerTarget    = true;
                 found              = true;
-                GLOG("DANGER: Found clear escape at angle %d", i * 30);
+                //GLOG("DANGER: Found clear escape at angle %d", i * 30);
                 break;
             }
         }
@@ -1347,7 +1347,7 @@ void Archer::DangerRetreat(float deltaTime)
             
             if (distToPlayer >= 6.0f)
             {
-                GLOG("DANGER: No route but safe (%.2f), holding position", distToPlayer);
+                //GLOG("DANGER: No route but safe (%.2f), holding position", distToPlayer);
                 agentAI->SetSpeed(0.0f, 0.0f);
                 return;
             }
@@ -1388,7 +1388,7 @@ void Archer::SearchForPlayer()
   
     if (!isStatic && distance <= rangeAIChase)
     {
-        GLOG("SEARCH -> CHASE: Player detected at close range %.2f", distance);
+        //GLOG("SEARCH -> CHASE: Player detected at close range %.2f", distance);
         isSearching = false;
         agentAI->ResetSpeed();
         currentState = ArcherStates::CHASE;
@@ -1466,7 +1466,7 @@ void Archer::Aim(float deltaTime)
 
     if (!hasLOS)
     {
-        GLOG("AIM -> CHASE", hasLOS ? "YES" : "NO");
+        //GLOG("AIM -> CHASE", hasLOS ? "YES" : "NO");
         isAiming     = false;
         aimTimer     = 0.0f;
         currentState = ArcherStates::CHASE;
@@ -1485,7 +1485,7 @@ void Archer::Aim(float deltaTime)
         if (playerScript) playerScript->ActivateArrowMark(predictedTarget);
         
         ActivateGlowVFX();
-        GLOG("AIM: Starting to aim at player");
+        //GLOG("AIM: Starting to aim at player");
     }
     else
     {
@@ -1499,7 +1499,7 @@ void Archer::Aim(float deltaTime)
 
         if (aimTimer >= aimDuration)
         {
-            GLOG("AIM: Finished aiming, shooting now");
+            //GLOG("AIM: Finished aiming, shooting now");
             isAiming = false;
             aimTimer = 0.0f;
 
@@ -1666,7 +1666,7 @@ void Archer::ChangeState()
 
     if (currentState == ArcherStates::DANGER)
     {
-        GLOG("ChangeState: In DANGER state, not changing");
+        //GLOG("ChangeState: In DANGER state, not changing");
         return;
     }
 
@@ -1674,7 +1674,7 @@ void Archer::ChangeState()
     {
         if (currentState != ArcherStates::PATROL)
         {
-            GLOG("Player dead - switching to patrol");
+            //GLOG("Player dead - switching to patrol");
             currentState = ArcherStates::PATROL;
             agentAI->SetLookForward(true);
             seekingCover = false;
@@ -1760,13 +1760,13 @@ void Archer::Escape(float deltaTime)
 
             if (dangerStuckTimer >= 0.5f)
             {
-                GLOG("ESCAPE: Stuck! Finding new route");
+                //GLOG("ESCAPE: Stuck! Finding new route");
                 hasEscapeTarget  = false;
                 dangerStuckTimer = 0.0f;
 
                 if (distToPlayer >= rangeEscape + 1.0f)
                 {
-                    GLOG("ESCAPE: Stuck but safe distance");
+                    //GLOG("ESCAPE: Stuck but safe distance");
                     agentAI->ResetSpeed();
                     ChangeState();
                     return;
@@ -1821,27 +1821,27 @@ void Archer::Escape(float deltaTime)
                     {
                         currentEscapeTarget = validatedPos;
                         hasEscapeTarget     = true;
-                        GLOG("ESCAPE: Good escape point at %.0f degrees", angleDeg);
+                        //GLOG("ESCAPE: Good escape point at %.0f degrees", angleDeg);
                         break;
                     }
                     else
                     {
-                        GLOG("ESCAPE: Rejected %.0f degrees - dead end detected", angleDeg);
+                        //GLOG("ESCAPE: Rejected %.0f degrees - dead end detected", angleDeg);
                     }
                 }
                 else
                 {
-                    GLOG(
+                    /*GLOG(
                         "ESCAPE: Rejected %.0f degrees - near navmesh edge (dist=%.2f)", angleDeg,
                         targetPos.Distance(validatedPos)
-                    );
+                    );*/
                 }
             }
         }
 
         if (!hasEscapeTarget)
         {
-            GLOG("ESCAPE: No good escape found, using immediate perpendicular");
+            //GLOG("ESCAPE: No good escape found, using immediate perpendicular");
             float3 perpDir      = float3(-escapeDir.z, 0.0f, escapeDir.x);
             currentEscapeTarget = archerPos + perpDir * 1.5f;
             hasEscapeTarget     = true;

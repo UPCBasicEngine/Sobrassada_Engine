@@ -20,7 +20,7 @@ RotateGameObject::RotateGameObject(GameObject* parent) : Script(parent)
 
 bool RotateGameObject::Init()
 {
-    GLOG("Initiating RotationGameObject");
+    //GLOG("Initiating RotationGameObject");
     if (target != nullptr)
     {
         target->SetEnabled(false);

@@ -13,6 +13,7 @@
 #include "GameObject.h"
 #include "GameSession.h"
 #include "GameTimer.h"
+#include "Standalone/UI/ImageComponent.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
 #include "MusicManager.h"
@@ -88,6 +89,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
     fields.push_back({"Ultimate Icon Name", InspectorField::FieldType::InputText, &ultimateIconName});
+    fields.push_back({"Ultimate Blocked Image", InspectorField::FieldType::Resource, &ultiBlockedImageUID});
+    fields.push_back({"Ultimate Unlocked Image", InspectorField::FieldType::Resource, &ultiUnlockedImageUID});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
@@ -100,6 +103,7 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
+
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
     fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
@@ -129,6 +133,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Riastrad VFX blur", InspectorField::FieldType::InputText, &riastradBlurName});
     fields.push_back({"Riastrad VFX crack", InspectorField::FieldType::InputText, &riastradCrackName});
     fields.push_back({"Riastrad VFX waring", InspectorField::FieldType::InputText, &riastradWarningName});
+    fields.push_back({"Color Red Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.x, 0.0f, 1.0f});
+    fields.push_back({"Color Green Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.y, 0.0f, 1.0f});
+    fields.push_back({"Color Blue Riastrad Mode", InspectorField::FieldType::Float, &colorRiastrad.z, 0.0f, 1.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"VFX"});
     fields.push_back({"Aim shadow object", InspectorField::FieldType::InputText, &aimShadowName});
@@ -384,7 +391,7 @@ bool CuChulainn::Init()
         riastradVfxBG = riastradObj->GetComponent<ShaderScriptComponent*>();
     }
     if (riastradVfxBG) riastradVfxBG->SetEnabled(false);
-    GLOG("[WARNING] No riastrad Eye BG VFX Shader Script found for CuChulain");
+    else GLOG("[WARNING] No riastrad Eye BG VFX Shader Script found for CuChulain");
 
     riastradObj = scene->GetGameObjectByName(riastradVfxFGName);
     if (riastradObj)
@@ -579,7 +586,7 @@ bool CuChulainn::Init()
     }
     if (!dashIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
 
-    GameObject* ultimateIconObj = scene->GetGameObjectByName(ultimateIconName);
+    ultimateIconObj = scene->GetGameObjectByName(ultimateIconName);
     if (ultimateIconObj)
     {
         ShaderScriptComponent* shaderScript = ultimateIconObj->GetComponent<ShaderScriptComponent*>();
@@ -673,17 +680,17 @@ bool CuChulainn::Init()
     CapsuleColliderComponent* playerCollider = parent->GetComponent<CapsuleColliderComponent*>();
     if (playerCollider)
     {
-        GLOG("=== PLAYER COLLIDER INFO ===");
-        GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
-        GLOG("Player name: %s", parent->GetName().c_str());
+        //GLOG("=== PLAYER COLLIDER INFO ===");
+        //GLOG("Player collider enabled: %s", playerCollider->GetEnabled() ? "true" : "false");
+        //GLOG("Player name: %s", parent->GetName().c_str());
 
         if (parent->HasTag(HashString("Player")))
         {
-            GLOG("Player has 'Player' tag: YES");
+            //GLOG("Player has 'Player' tag: YES");
         }
         else
         {
-            GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
+            //GLOG("Player has 'Player' tag: NO - THIS IS A PROBLEM!");
         }
     }
     else
@@ -978,10 +985,16 @@ void CuChulainn::HandleState(float deltaTime)
         aimTimer = 0.0f;
     }
 
+    if (forceIdleState)
+    {
+        ResetState();
+        return;
+    }
+
     if (desiredTransform && CanTransform()) ToggleRiastrad();
     else if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
-    else if (desiredUltimate && CanUltimate()) UltimateAttack();
+    else if (desiredUltimate && !ultimateblocked && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
@@ -1076,7 +1089,7 @@ void CuChulainn::GetInputs()
     {
         if (newIsRunning && !moveFromCollision)
         {
-            GLOG("Start running");
+            //GLOG("Start running");
             const HashString walkStateName = HashString("Walk");
             for (State& state : animComponent->GetResourceStateMachine()->states)
             {
@@ -1096,7 +1109,7 @@ void CuChulainn::GetInputs()
         }
         else if (!newIsRunning && moveFromCollision)
         {
-            GLOG("Stop running");
+            //GLOG("Stop running");
             const HashString walkStateName = HashString("Walk");
             for (State& state : animComponent->GetResourceStateMachine()->states)
             {
@@ -2035,13 +2048,13 @@ void CuChulainn::ActivateArrowMark(float3 targetPos)
 {
     if (!markVfxObject)
     {
-        GLOG("VFX: ERROR - markVfxObject is NULL!");
+        //GLOG("VFX: ERROR - markVfxObject is NULL!");
         return;
     }
 
     SetArrowMark(targetPos);
 
-    GLOG("VFX: Activating arrow mark at position (%.2f, %.2f, %.2f)", targetPos.x, targetPos.y, targetPos.z);
+    //GLOG("VFX: Activating arrow mark at position (%.2f, %.2f, %.2f)", targetPos.x, targetPos.y, targetPos.z);
 
     markVfxTimer    = 0.0f;
     markVfxIsActive = true;
@@ -2050,19 +2063,19 @@ void CuChulainn::ActivateArrowMark(float3 targetPos)
     if (markVfxIsActive && markVfxObject && !markVfxObject->IsEnabled())
     {
 
-        GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
+        //GLOG("VFX: Activating hit effect - Object found: %s", markVfxObject->GetName().c_str());
 
         markVfxTimer    = 0.0f;
         markVfxIsActive = true;
 
         markVfxObject->SetEnabled(true);
-        GLOG("VFX: Object enabled");
+        //GLOG("VFX: Object enabled");
 
         auto meshComp = markVfxObject->GetComponent<MeshComponent*>();
         if (meshComp != nullptr)
         {
             meshComp->SetEnabled(false);
-            GLOG("VFX: MeshComponent disabled successfully");
+            //GLOG("VFX: MeshComponent disabled successfully");
         }
         else
         {
@@ -2071,13 +2084,13 @@ void CuChulainn::ActivateArrowMark(float3 targetPos)
         auto shaderScriptComp = markVfxObject->GetComponent<ShaderScriptComponent*>();
         if (shaderScriptComp != nullptr)
         {
-            GLOG("VFX: ShaderScriptComponent found");
+            //GLOG("VFX: ShaderScriptComponent found");
 
             auto attackVfxScript = shaderScriptComp->GetScriptByType<AttackVfxSpritesheet>();
             if (attackVfxScript)
             {
                 attackVfxScript->Reset();
-                GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
+                //GLOG("VFX: AttackVfxSpritesheet Reset() called successfully");
             }
             else
             {
@@ -2091,7 +2104,7 @@ void CuChulainn::SetArrowMark(float3 posArrow)
 {
     if (!markVfxObject)
     {
-        GLOG("VFX: ERROR - markObject is NULL!");
+        //GLOG("VFX: ERROR - markObject is NULL!");
         return;
     }
     markVfxObject->SetPosition(posArrow);
@@ -2146,7 +2159,8 @@ void CuChulainn::Move()
             );
             GameObject* object = RaycastController::GetRayIntersectionTrees(
                 ray, AppEngine->GetSceneModule()->GetScene()->GetOctree(),
-                AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+                //AppEngine->GetSceneModule()->GetScene()->GetDynamicTree()
+                AppEngine->GetSceneModule()->GetScene()->GetDynamicOctree()
             );
 
             if (object)
@@ -2262,10 +2276,10 @@ void CuChulainn::Respawn()
 void CuChulainn::TakeDamage(int amount)
 {
     int prev = currentHealth;
-    GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
+    //GLOG("[PLAYER] TakeDamage(%d) hpBefore=%d state=%s", amount, prev, GetLogicStateName().c_str());
     if (godMode || isRiastrad || state == CharacterStates::ULTIMATE)
     {
-        GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
+        //GLOG("[PLAYER] TakeDamage -> INVULNERABLE (ignorat)");
         return;
     }
     Character::TakeDamage(amount);
@@ -2396,7 +2410,7 @@ void CuChulainn::ChargeAttack()
         }
         else
         {
-            GLOG("NOT CHARGED ENOUFGH");
+            //GLOG("NOT CHARGED ENOUGH");
             character->EnableMovement(true);
             state = CharacterStates::IDLE;
             if (animComponent) animComponent->UseTrigger("Idle");
@@ -2412,6 +2426,14 @@ void CuChulainn::ToggleRiastrad()
     if (!isRiastrad)
     {
         EndCurse();
+
+        ultimateblocked                 = true;
+
+        ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
+        if (ultimateImgIcon)
+        {
+            if (ultiBlockedImageUID != INVALID_UID) ultimateImgIcon->ChangeTexture(ultiBlockedImageUID);
+        }
 
         // Start Riastrad
         AddRiastrad(-100);
@@ -2526,6 +2548,23 @@ void CuChulainn::ToggleRiastrad()
             state = CharacterStates::IDLE;
         }
 
+        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+        if (res)
+        {
+            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+            float4 newColor       = mat->GetMaterial().diffColor;
+            newColor              = float4::one;
+            mat->SetDiffColor(newColor);
+        }
+
+        ultimateblocked                 = false;
+
+        ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
+        if (ultimateImgIcon)
+        {
+            if (ultiUnlockedImageUID!=INVALID_UID) ultimateImgIcon->ChangeTexture(ultiUnlockedImageUID);
+        }
+
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
         if (musicManager != nullptr)
         {
@@ -2597,6 +2636,17 @@ void CuChulainn::EnableRiastradVfx()
         riastradGroundExplosion->SetEnabled(true);
         riastradGroundExplosion->GetScriptByType<AttackVfxSpritesheet>()->Reset();
     }
+
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor.y            = colorRiastrad.y;
+        newColor.x            = colorRiastrad.x;
+        newColor.z            = colorRiastrad.z;
+        mat->SetDiffColor(newColor);
+    }
 }
 
 void CuChulainn::AddRiastrad(int amount)
@@ -2625,8 +2675,9 @@ void CuChulainn::ResetState()
     {
         character->SetDirection(float3::zero);
         character->SetIsRunning(false);
-        //character->EnableMovement(false);
-        if (animComponent) animComponent->UseTrigger("Idle");
+        character->EnableMovement(false);
+        if (animComponent) 
+            animComponent->UseTrigger("Idle");
         state = CharacterStates::IDLE;
     }
 }
@@ -2740,6 +2791,15 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
 
 void CuChulainn::EndCurse()
 {
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor              = float4::one;
+        mat->SetDiffColor(newColor);
+    }
+
     isCursed = false;
     character->SetMaxSpeed(defaultSpeed);
 
@@ -2800,7 +2860,7 @@ bool CuChulainn::IsBlockedAhead(
         if (userPointer)
         {
             hitGO = userPointer->collider->GetParent();
-            GLOG("[IsBlockedAhead]: Physics Raycast hit!, %s", hitGO->GetName().c_str());
+            //GLOG("[IsBlockedAhead]: Physics Raycast hit!, %s", hitGO->GetName().c_str());
         }
 
         DebugDrawModule* debug = AppEngine->GetDebugDrawModule();

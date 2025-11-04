@@ -46,7 +46,7 @@ bool ArcherProjectile::Init()
         return false;
     }
 
-    GLOG("ARCHER PROJECTILE INIT DEBUG");
+    //GLOG("ARCHER PROJECTILE INIT DEBUG");
     return true;
 }
 
@@ -91,7 +91,7 @@ void ArcherProjectile::Shoot(const float3& origin, const float3& direction)
     parent->SetEnabled(true);
     parent->SetEnabledRecursive(true);
 
-    GLOG("Archer arrow shot initialized at position: (%.2f, %.2f, %.2f)", origin.x, origin.y, origin.z);
+    //GLOG("Archer arrow shot initialized at position: (%.2f, %.2f, %.2f)", origin.x, origin.y, origin.z);
 }
 
 void ArcherProjectile::OnCollision(GameObject* otherObject, const float3 collisionNormal, ColliderLayer layer)
@@ -102,13 +102,13 @@ void ArcherProjectile::OnCollision(GameObject* otherObject, const float3 collisi
 
     if (otherObject->HasTag(wallTag) && script->GetScriptByType<WallCollision>())
     {
-        GLOG("WALL WALL WALL WALL");
+        //GLOG("WALL WALL WALL WALL");
         isStuckInWall = true;
         stuckTimer    = 0.0f;
 
         if (collider) collider->SetEnabled(false);
 
-        GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
+        //GLOG("Arrow stuck in wall for %.2f seconds", stuckDuration);
         return;
     }
     parent->SetEnabled(false);
@@ -116,7 +116,7 @@ void ArcherProjectile::OnCollision(GameObject* otherObject, const float3 collisi
 
 void ArcherProjectile::OnWallHit()
 {
-    GLOG("Archer projectile hit wall - activating stuck state");
+    //GLOG("Archer projectile hit wall - activating stuck state");
     isStuckInWall = true;
     stuckTimer    = 0.0f;
 
@@ -125,7 +125,7 @@ void ArcherProjectile::OnWallHit()
         collider->SetEnabled(false);
     }
 
-    GLOG("Archer arrow stuck in wall for %.2f seconds", stuckDuration);
+    //GLOG("Archer arrow stuck in wall for %.2f seconds", stuckDuration);
 }
 
 void ArcherProjectile::Hit(GameObject* otherObject)
@@ -135,7 +135,7 @@ void ArcherProjectile::Hit(GameObject* otherObject)
     {
         CuChulainn* player = script->GetScriptByType<CuChulainn>();
         player->OnArrowHit();
-        GLOG("Archer arrow hit player - triggering particles");
+        //GLOG("Archer arrow hit player - triggering particles");
         StopProjectile();
     }
 }
@@ -158,7 +158,7 @@ void ArcherProjectile::Reset()
 
     parent->SetEnabled(false);
 
-    GLOG("Archer projectile reset to initial state");
+    //GLOG("Archer projectile reset to initial state");
 }
 
 void ArcherProjectile::StopProjectile()
@@ -182,14 +182,14 @@ void ArcherProjectile::Move(float deltaTime)
     const float3 worldPos = parent->GetGlobalTransform().TranslatePart();
     if (currentPos.Distance(startPos) > range)
     {
-        GLOG("Archer arrow stopped - out of range");
+        //GLOG("Archer arrow stopped - out of range");
         StopProjectile();
         return;
     }
 
     if (frames > 60 && !IsInsideCameraView(worldPos, 2.5f))
     {
-        GLOG("Archer arrow stopped - out of camera view");
+        //GLOG("Archer arrow stopped - out of camera view");
         StopProjectile();
         return;
     }

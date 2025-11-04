@@ -64,7 +64,7 @@ void PauseMenuScript::Show()
 
     if (audio != nullptr)
     {
-        GLOG("Switching Gamestate to menu")
+        //GLOG("Switching Gamestate to menu")
         audio->EmitEvent(AK::EVENTS::SET_GAMESTATE_MENU);
     }
 

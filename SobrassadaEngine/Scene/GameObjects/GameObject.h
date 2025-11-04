@@ -44,6 +44,7 @@ class ParticleSystemComponent;
 class VideoComponent;
 class ShaderScriptComponent;
 class VolumetricAreaComponent;
+struct DynamicOctreeNode;
 
 enum MobilitySettings
 {
@@ -187,6 +188,9 @@ class SOBRASADA_API_ENGINE GameObject
 
     GameObject* GetChildGameObjectByName(const std::string& name);
 
+    DynamicOctreeNode* GetDynamicNode() { return dynamicNode; }
+    void SetDynamicNode(DynamicOctreeNode* newNode) { dynamicNode = newNode; }
+
   private:
     void DrawNodes() const;
     void OnDrawConnectionsToggle();
@@ -242,6 +246,8 @@ class SOBRASADA_API_ENGINE GameObject
     int selectedGlobalTag        = -1;
     HashString globalSelectedTag = HashString("");
     std::vector<HashString> tags;
+
+    DynamicOctreeNode* dynamicNode = nullptr;
 };
 
 template <typename T> inline T GameObject::GetComponentChild(Application* app) const

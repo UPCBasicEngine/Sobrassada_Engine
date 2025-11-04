@@ -5,6 +5,7 @@
 #include "CameraModule.h"
 #include "DetourNavMesh.h"
 #include "DetourNavMeshQuery.h"
+#include "DynamicOctree.h"
 #include "Framebuffer.h"
 #include "GameObject.h"
 #include "Globals.h"
@@ -627,8 +628,10 @@ bool DebugDrawModule::ShutDown()
 
 update_status DebugDrawModule::Render(float deltaTime)
 {
-    // dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
+// dd::axisTriad(float4x4::identity, 0.1f, 1.0f);
+#ifndef GAME
     if (!App->GetSceneModule()->GetInPlayMode()) dd::xzSquareGrid(-10, 10, 0.0f, 1.0f, dd::colors::Blue);
+#endif
 
     if (App->GetSceneModule()->GetInPlayMode())
     {
@@ -841,7 +844,7 @@ void DebugDrawModule::HandleDebugRenderOptions()
 
     if (debugOptionValues[(int)DebugOptions::RENDER_DYNAMICTREE])
     {
-        Octree* dynamicTree = sceneModule->GetScene()->GetDynamicTree();
+        DynamicOctree* dynamicTree = sceneModule->GetScene()->GetDynamicOctree();
         if (dynamicTree != nullptr) RenderLines(dynamicTree->GetDrawLines(), float3(0.467f, 0.647f, 0.91f));
     }
 

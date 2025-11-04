@@ -51,7 +51,7 @@ void ChangeSceneScript::Update(float deltaTime)
             const CuChulainn* mcScript = scriptComp->GetScriptByType<CuChulainn>();
             if (mcScript != nullptr)
             {
-                GLOG("Processing scene change request to: %s", targetSceneName.c_str())
+                //GLOG("Processing scene change request to: %s", targetSceneName.c_str())
 
                 const std::string projectPath = AppEngine->GetProjectModule()->GetLoadedProjectPath();
                 const std::string savePath    = SavePlayerData::MakeSavePath(projectPath);

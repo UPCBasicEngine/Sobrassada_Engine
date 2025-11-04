@@ -42,7 +42,7 @@ Spouts::Spouts(GameObject* parent) : Script(parent)
         {"Trigger Spout",
          [this](Script* self)
          {
-             GLOG("Triggering spout");
+             //GLOG("Triggering spout");
              ForceActivate();
          }}
     );
@@ -234,7 +234,7 @@ void Spouts::DisableCollider()
 
 void Spouts::ForceActivate()
 {
-    GLOG("Force Activation");
+    //GLOG("Force Activation");
 
     ResetUVs();
     damageCollider->SetEnabled(false);

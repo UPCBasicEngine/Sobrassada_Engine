@@ -177,6 +177,7 @@ class Boss : public Character
     bool doTaunt                                         = false;
     bool actionTriggerDone                               = false;
 
+    bool playOutro                                       = false;
     bool stopLogic                                       = false;
     float timerToChangeScene                             = 0.0f;
     std::string changeSceneName                          = "";
