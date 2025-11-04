@@ -2426,23 +2426,12 @@ void CuChulainn::ToggleRiastrad()
     {
         EndCurse();
 
-        Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
-        if (res)
-        {
-            ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
-            float4 newColor       = mat->GetMaterial().diffColor;
-            newColor.y            = colorRiastrad.y;
-            newColor.x            = colorRiastrad.x;
-            newColor.z            = colorRiastrad.z;
-            mat->SetDiffColor(newColor);
-        }
-
         ultimateblocked                 = true;
 
         ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
         if (ultimateImgIcon)
         {
-            ultimateImgIcon->ChangeTexture(ultiBlockedImageUID);
+            if (ultiBlockedImageUID != INVALID_UID) ultimateImgIcon->ChangeTexture(ultiBlockedImageUID);
         }
 
         // Start Riastrad
@@ -2572,7 +2561,7 @@ void CuChulainn::ToggleRiastrad()
         ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
         if (ultimateImgIcon)
         {
-            ultimateImgIcon->ChangeTexture(ultiUnlockedImageUID);
+            if (ultiUnlockedImageUID!=INVALID_UID) ultimateImgIcon->ChangeTexture(ultiUnlockedImageUID);
         }
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
@@ -2645,6 +2634,17 @@ void CuChulainn::EnableRiastradVfx()
     {
         riastradGroundExplosion->SetEnabled(true);
         riastradGroundExplosion->GetScriptByType<AttackVfxSpritesheet>()->Reset();
+    }
+
+    Resource* res = AppEngine->GetResourcesModule()->RequestResource(playerMaterial);
+    if (res)
+    {
+        ResourceMaterial* mat = static_cast<ResourceMaterial*>(res);
+        float4 newColor       = mat->GetMaterial().diffColor;
+        newColor.y            = colorRiastrad.y;
+        newColor.x            = colorRiastrad.x;
+        newColor.z            = colorRiastrad.z;
+        mat->SetDiffColor(newColor);
     }
 }
 
