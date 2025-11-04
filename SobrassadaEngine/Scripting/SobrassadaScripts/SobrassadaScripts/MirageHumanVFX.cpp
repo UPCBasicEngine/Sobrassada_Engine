@@ -107,6 +107,7 @@ void MirageHumanVFX::Render(float deltaTime, CameraComponent* cameraComp)
         float4x4 projectionMatrix, viewMatrix, basicModelMatrix;
 
         basicModelMatrix = meshComp->GetCombinedMatrix();
+        meshComp->SetEnabled(false);
 
         if (cameraComp)
         {
