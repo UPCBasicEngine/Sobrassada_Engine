@@ -794,7 +794,6 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
         {
             SetDynamicModified();
 
-            // DYNAMIC OCTREE TESTING
             dynamicOctree->RemoveElement(gameObject, false);
         }
 
@@ -1102,7 +1101,7 @@ void Scene::CreateStaticSpatialDataStruct()
     // PARAMETRIZED IN FUTURE
     float3 octreeCenter = float3::zero;
     float octreeLength  = 2000;
-    int nodeCapacity    = 10;
+    int nodeCapacity    = 15;
     sceneOctree         = new Octree(octreeCenter, octreeLength, nodeCapacity);
 
     for (const auto& objectIterator : gameObjectsContainer)

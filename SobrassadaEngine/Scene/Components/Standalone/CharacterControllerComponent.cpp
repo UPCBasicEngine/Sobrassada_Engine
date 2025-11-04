@@ -551,13 +551,10 @@ void CharacterControllerComponent::CheckDashObstacles()
 
     GameObject* centralHit =
         RaycastController::GetRayIntersectionTrees(centralRay, App->GetSceneModule()->GetScene()->GetOctree());
-        //RaycastController::GetRayIntersectionTrees(centralRay, App->GetSceneModule()->GetScene()->GetDynamicOctree());
     GameObject* rightHit =
         RaycastController::GetRayIntersectionTrees(rightRay, App->GetSceneModule()->GetScene()->GetOctree());
-        //RaycastController::GetRayIntersectionTrees(rightRay, App->GetSceneModule()->GetScene()->GetDynamicOctree());
     GameObject* leftHit =
         RaycastController::GetRayIntersectionTrees(leftRay, App->GetSceneModule()->GetScene()->GetOctree());
-        //RaycastController::GetRayIntersectionTrees(leftRay, App->GetSceneModule()->GetScene()->GetDynamicOctree());
 
     GameObject* hitParent          = nullptr;
     BulletUserPointer* userPointer = RaycastController::GetRayIntersectionPhysics(centralRay);
