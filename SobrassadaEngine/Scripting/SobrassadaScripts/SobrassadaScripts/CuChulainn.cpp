@@ -89,9 +89,8 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
     fields.push_back({"Ultimate Icon Name", InspectorField::FieldType::InputText, &ultimateIconName});
-    fields.push_back({"UI Ultimate Red", InspectorField::FieldType::Float, &colorUltimateUI.x, 0.0f, 255.0f});
-    fields.push_back({"UI Ultimate Green", InspectorField::FieldType::Float, &colorUltimateUI.y, 0.0f, 255.0f});
-    fields.push_back({"UI Ultimate Blue", InspectorField::FieldType::Float, &colorUltimateUI.z, 0.0f, 255.0f});
+    fields.push_back({"Ultimate Blocked Image", InspectorField::FieldType::Resource, &ultiBlockedImageUID});
+    fields.push_back({"Ultimate Unlocked Image", InspectorField::FieldType::Resource, &ultiUnlockedImageUID});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
@@ -2443,7 +2442,7 @@ void CuChulainn::ToggleRiastrad()
         ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
         if (ultimateImgIcon)
         {
-            ultimateImgIcon->SetColor(colorUltimateUI/255.0f);
+            ultimateImgIcon->ChangeTexture(ultiBlockedImageUID);
         }
 
         // Start Riastrad
@@ -2573,7 +2572,7 @@ void CuChulainn::ToggleRiastrad()
         ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
         if (ultimateImgIcon)
         {
-            ultimateImgIcon->SetColor(float3::one);
+            ultimateImgIcon->ChangeTexture(ultiUnlockedImageUID);
         }
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
