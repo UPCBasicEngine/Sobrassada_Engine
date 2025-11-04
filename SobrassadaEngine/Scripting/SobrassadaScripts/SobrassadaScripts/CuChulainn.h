@@ -304,10 +304,9 @@ class CuChulainn : public Character
     float vfxTimeUnscaledSec                       = 0.0f;
     bool ultimateSoundPlayed                       = false;
     float ultimateSpeed                            = 1.3f;
-
-    GameObject* ultimateUICooldown                     = nullptr;
-    std::string ultimateUIGOName                       = "";
-    float3 colorUltimateUI                             = {255.0f, 255.0f, 255.0f};
+    GameObject* ultimateIconObj                        = nullptr;
+    float3 colorUltimateUI                             = float3::one * 255.0f;
+    bool ultimateblocked                               = false;
 
     // Riastrad
     std::string riastradBarName                    = "BarFill";

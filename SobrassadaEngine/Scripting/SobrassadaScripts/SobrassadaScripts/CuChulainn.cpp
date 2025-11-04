@@ -13,6 +13,7 @@
 #include "GameObject.h"
 #include "GameSession.h"
 #include "GameTimer.h"
+#include "Standalone/UI/ImageComponent.h"
 #include "InputModule.h"
 #include "MovingUVTransparent.h"
 #include "MusicManager.h"
@@ -88,6 +89,9 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back({"Ultimate hitbox duration", InspectorField::FieldType::Float, &ultimateHitboxDuration, 0.0f, 5.0f}
     );
     fields.push_back({"Ultimate Icon Name", InspectorField::FieldType::InputText, &ultimateIconName});
+    fields.push_back({"UI Ultimate Red", InspectorField::FieldType::Float, &colorUltimateUI.x, 0.0f, 255.0f});
+    fields.push_back({"UI Ultimate Green", InspectorField::FieldType::Float, &colorUltimateUI.y, 0.0f, 255.0f});
+    fields.push_back({"UI Ultimate Blue", InspectorField::FieldType::Float, &colorUltimateUI.z, 0.0f, 255.0f});
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Charged attack parameters"});
     fields.push_back({"Charged Attack object", InspectorField::FieldType::InputText, &chargedAttackName});
@@ -100,13 +104,6 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
-    fields.push_back({"UI Ultimate Red", InspectorField::FieldType::Float, &colorUltimateUI.x, 0.0f, 255.0f}
-    );
-    fields.push_back({"UI Ultimate Green", InspectorField::FieldType::Float, &colorUltimateUI.y, 0.0f, 255.0f}
-    );
-    fields.push_back({"UI Ultimate Blue", InspectorField::FieldType::Float, &colorUltimateUI.z, 0.0f, 255.0f}
-    );
-
 
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
@@ -590,7 +587,7 @@ bool CuChulainn::Init()
     }
     if (!dashIcon) GLOG("[WARNING] No dash icon Shader Script found for CuChulain");
 
-    GameObject* ultimateIconObj = scene->GetGameObjectByName(ultimateIconName);
+    ultimateIconObj = scene->GetGameObjectByName(ultimateIconName);
     if (ultimateIconObj)
     {
         ShaderScriptComponent* shaderScript = ultimateIconObj->GetComponent<ShaderScriptComponent*>();
@@ -658,8 +655,6 @@ bool CuChulainn::Init()
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
-
-    ultimateUICooldown      = scene->GetGameObjectByName(ultimateIconName);
 
     // Curse
     GameObject* curseParent = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(curseParentName);
@@ -1000,7 +995,7 @@ void CuChulainn::HandleState(float deltaTime)
     if (desiredTransform && CanTransform()) ToggleRiastrad();
     else if (desiredDash && CanDash()) Dash();
     else if (desiredHeal && CanHeal()) UseMushroom();
-    else if (desiredUltimate && CanUltimate()) UltimateAttack();
+    else if (desiredUltimate && !ultimateblocked && CanUltimate()) UltimateAttack();
     else if (desiredAttack && CanAttack()) Attack(deltaTime);
     else if (desiredAim && CanAim()) Aim(deltaTime);
     else if (attackPressTimer >= chargeThreshold && CanChargeAttack()) ChargeAttack();
@@ -2443,10 +2438,12 @@ void CuChulainn::ToggleRiastrad()
             mat->SetDiffColor(newColor);
         }
 
+        ultimateblocked                 = true;
+
         ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
         if (ultimateImgIcon)
         {
-            ultimateImgIcon->SetColor(colorUltimateUI);
+            ultimateImgIcon->SetColor(colorUltimateUI/255.0f);
         }
 
         // Start Riastrad
@@ -2571,10 +2568,12 @@ void CuChulainn::ToggleRiastrad()
             mat->SetDiffColor(newColor);
         }
 
+        ultimateblocked                 = false;
+
         ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
         if (ultimateImgIcon)
         {
-            ultimateImgIcon->SetColor({255.0f, 255.0f, 255.0f});
+            ultimateImgIcon->SetColor(float3::one);
         }
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
