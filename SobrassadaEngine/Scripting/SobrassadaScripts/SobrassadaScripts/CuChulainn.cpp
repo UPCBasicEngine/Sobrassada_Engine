@@ -100,6 +100,14 @@ CuChulainn::CuChulainn(GameObject* parent)
     fields.push_back(
         {"Charged Attack hitbox duration", InspectorField::FieldType::Float, &chargedAttackHitboxDuration, 0.0f, 5.0f}
     );
+    fields.push_back({"UI Ultimate Red", InspectorField::FieldType::Float, &colorUltimateUI.x, 0.0f, 255.0f}
+    );
+    fields.push_back({"UI Ultimate Green", InspectorField::FieldType::Float, &colorUltimateUI.y, 0.0f, 255.0f}
+    );
+    fields.push_back({"UI Ultimate Blue", InspectorField::FieldType::Float, &colorUltimateUI.z, 0.0f, 255.0f}
+    );
+
+
 
     fields.push_back({InspectorField::FieldType::Text, (void*)"Curse parameters"});
     fields.push_back({"Curse duration", InspectorField::FieldType::Float, &curseDuration, 0.0f, 100.0f});
@@ -650,6 +658,8 @@ bool CuChulainn::Init()
     ultimateSpikes = scene->GetGameObjectByParentNameAndTargetName(ultimateName, ultimateSpikesName);
     if (!ultimateSpikes) GLOG("[WARNING] No ultimate spikes VFX found for CuChulain")
     else ultimateSpikes->SetEnabled(false);
+
+    ultimateUICooldown      = scene->GetGameObjectByName(ultimateIconName);
 
     // Curse
     GameObject* curseParent = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName(curseParentName);
@@ -2433,6 +2443,12 @@ void CuChulainn::ToggleRiastrad()
             mat->SetDiffColor(newColor);
         }
 
+        ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
+        if (ultimateImgIcon)
+        {
+            ultimateImgIcon->SetColor(colorUltimateUI);
+        }
+
         // Start Riastrad
         AddRiastrad(-100);
         isRiastrad    = true;
@@ -2553,6 +2569,12 @@ void CuChulainn::ToggleRiastrad()
             float4 newColor       = mat->GetMaterial().diffColor;
             newColor              = float4::one;
             mat->SetDiffColor(newColor);
+        }
+
+        ImageComponent* ultimateImgIcon = ultimateIconObj->GetComponent<ImageComponent*>();
+        if (ultimateImgIcon)
+        {
+            ultimateImgIcon->SetColor({255.0f, 255.0f, 255.0f});
         }
 
         GameObject* musicManager = AppEngine->GetSceneModule()->GetScene()->GetGameObjectByName("MusicManager");
