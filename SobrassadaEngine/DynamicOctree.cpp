@@ -9,8 +9,8 @@
 
 DynamicOctreeNode::~DynamicOctreeNode()
 {
-    //for (auto& element : elements)
-    //    element.gameObject->SetDynamicNode(nullptr);
+    for (auto& element : elements)
+        element.gameObject->SetDynamicNode(nullptr);
 
     for (auto& child : children)
     {
@@ -150,8 +150,11 @@ bool DynamicOctree::InsertElement(GameObject* gameObject)
                 if (currentNode->currentArea.HalfSize().x <= MINIMUM_TREE_LEAF_SIZE ||
                     currentNode->elements.size() < currentNode->elementsCapacity)
                 {
-                    ++totalElements;
-                    return currentNode->InsertElement(octreeElement);
+                    if (currentNode->InsertElement(octreeElement))
+                    {
+                        ++totalElements;
+                        return true;
+                    }
                 }
                 else
                 {

@@ -8,6 +8,7 @@
 #include "SceneModule.h"
 
 #include "CameraComponent.h"
+#include "DynamicOctree.h"
 #include "ParticleSystemComponent.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
@@ -35,7 +36,6 @@
 #include "Standalone/UI/UILabelComponent.h"
 #include "Standalone/VideoComponent.h"
 #include "VolumetricAreaComponent.h"
-#include "DynamicOctree.h"
 
 #include "imgui.h"
 #include <queue>
@@ -288,6 +288,8 @@ GameObject::~GameObject()
     }
 
     App->GetSceneModule()->GetScene()->RemoveTransformUpdatedGameObject(this);
+
+    if (dynamicNode) App->GetSceneModule()->GetScene()->GetDynamicOctree()->RemoveElement(this, true);
 
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
 }
@@ -1524,7 +1526,7 @@ void GameObject::SetEnabledRecursive(bool value)
             child->SetEnabledRecursive(value);
 }
 
-GameObject* GameObject::GetChildGameObjectByName(const std::string& name) 
+GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
 {
     std::stack<UID> nodesToVisit;
     for (UID childUID : children)
@@ -1549,6 +1551,6 @@ GameObject* GameObject::GetChildGameObjectByName(const std::string& name)
         }
     }
 
-    //GLOG("[WARNING] No gameObject found with name %s", name.c_str());
+    // GLOG("[WARNING] No gameObject found with name %s", name.c_str());
     return nullptr;
 }
