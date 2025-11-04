@@ -91,6 +91,21 @@ void GameDebugUIModule::Draw()
 {
     if (gameDebugMenu) GameDebugMenu();
     RenderOptions();
+
+    if (drawFPS)
+    {
+        // Delta time comes in ms instead of s
+        const float deltaTime = App->GetGameTimer()->GetDeltaTime();
+        const float currentFPS      = floor(deltaTime ? 1000.f / deltaTime : 0);
+
+        App->GetDebugDrawModule()->Draw2DText(
+            std::to_string(currentFPS).c_str(), float3(10.f, 10.f, 0.f), float3(1, 1, 0)
+        );
+    }
+
+    if (openConsole) App->GetEditorUIModule()->Console(openConsole);
+
+    if (loadMenu) App->GetEditorUIModule()->LoadDialog(loadMenu, true, true);
 }
 
 void GameDebugUIModule::GameDebugMenu()
@@ -101,17 +116,11 @@ void GameDebugUIModule::GameDebugMenu()
         return;
     }
 
-    // Delta time comes in ms instead of s
-    const float deltaTime = App->GetGameTimer()->GetDeltaTime();
-    const float fps       = deltaTime ? 1000.f / deltaTime : 0;
-
-    ImGui::Text("FPS:");
-    ImGui::SameLine();
-    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), std::to_string(fps).c_str());
+    ImGui::Checkbox("Show fps", &drawFPS);
 
     ImGui::Checkbox("Console", &openConsole);
 
-    if (openConsole) App->GetEditorUIModule()->Console(openConsole);
+    if (ImGui::Button("Load Scene")) loadMenu = !loadMenu;
 
     ImGui::Spacing();
     ImGui::Spacing();

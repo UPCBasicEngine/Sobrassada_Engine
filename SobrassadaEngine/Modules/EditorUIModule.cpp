@@ -450,7 +450,7 @@ void EditorUIModule::MainMenu()
     ImGui::EndMainMenuBar();
 }
 
-void EditorUIModule::LoadDialog(bool& loadMenu)
+void EditorUIModule::LoadDialog(bool& loadMenu, bool forceReload, bool switchPlayMode)
 {
     ImGui::SetNextWindowSize(ImVec2(width * 0.25f, height * 0.4f), ImGuiCond_FirstUseEver);
 
@@ -490,7 +490,11 @@ void EditorUIModule::LoadDialog(bool& loadMenu)
 
     if (ImGui::Button("Ok", ImVec2(0, 0)))
     {
-        if (!inputFileLoad.empty()) App->GetLibraryModule()->LoadScene(inputFileLoad.c_str());
+        if (!inputFileLoad.empty())
+        {
+            App->GetLibraryModule()->LoadScene(inputFileLoad.c_str(), forceReload);
+            if (switchPlayMode) App->GetSceneModule()->SwitchPlayMode(true);
+        }
 
         loadMenu = false;
     }
