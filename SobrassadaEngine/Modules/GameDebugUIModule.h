@@ -24,6 +24,7 @@ class GameDebugUIModule : public Module
   private:
     bool gameDebugMenu    = false;
     bool closeApplication = false;
+    bool loadMenu = false;
 
     bool drawFPS = false;
     bool openConsole = false;
