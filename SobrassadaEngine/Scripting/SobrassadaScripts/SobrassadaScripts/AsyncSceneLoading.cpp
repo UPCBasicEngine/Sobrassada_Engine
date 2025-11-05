@@ -45,7 +45,7 @@ bool AsyncSceneLoading::SkipCutscene() const
 {
     if (videoComponent->GetTimeSinceVideoStart() < minimumPlayTimeBeforeSkip)
     {
-        GLOG("Blocked skip cutscene")
+        //GLOG("Blocked skip cutscene")
         return false;
     }
     

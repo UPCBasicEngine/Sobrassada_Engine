@@ -18,6 +18,7 @@ class GameObject;
 class Component;
 class RootComponent;
 class Octree;
+class DynamicOctree;
 class ResourcePrefab;
 class Quadtree;
 class CameraComponent;
@@ -68,6 +69,7 @@ class SOBRASADA_API_ENGINE Scene
 
     void UpdateStaticSpatialStructure();
     void UpdateDynamicSpatialStructure();
+    void UpdateDynamicOctree();
 
     void AddGameObject(UID uid, GameObject* newGameObject) { gameObjectsContainer.insert({uid, newGameObject}); }
     void RemoveGameObjectHierarchy(UID gameObjectUUID);
@@ -116,18 +118,21 @@ class SOBRASADA_API_ENGINE Scene
     const std::tuple<float, float>& GetWindowPosition() const { return sceneWindowPosition; };
     const std::tuple<float, float>& GetWindowSize() const { return sceneWindowSize; };
     const std::tuple<float, float>& GetMousePosition() const { return mousePosition; };
+
     Octree* GetOctree() const { return sceneOctree; }
     Octree* GetDynamicTree() const { return dynamicTree; }
+    DynamicOctree* GetDynamicOctree() const { return dynamicOctree; }
+
     UID GetMultiselectUID() const;
     GameObject* GetMultiselectParent() const { return multiSelectParent; }
-    UID GetNavmeshUID() const { return navmeshUID; }
-    GameObject* GetMultiselectParent() { return multiSelectParent; }
     const std::map<UID, UID>& GetMultiselectedObjects() const { return selectedGameObjects; }
     const std::map<UID, MobilitySettings>& GetMultiselectedObjectsMobility() const
     {
         return selectedGameObjectsMobility;
     }
     const std::map<UID, float4x4>& GetMultiselectedObjectsLocals() const { return selectedGameObjectsOgLocals; }
+
+    UID GetNavmeshUID() const { return navmeshUID; }
     RenderPass* GetRenderPass() { return renderPass; }
 
     void SetMainCamera(CameraComponent* camera) { mainCamera = camera; }
@@ -160,9 +165,14 @@ class SOBRASADA_API_ENGINE Scene
 
     bool isSceneLoaded = false;
 
+    void AddTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.insert(gameObject); };
+    void RemoveTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.erase(gameObject); };
+    void ClearTransformTransformUpdatedGameObjects() { transformUpdatedGameObjects.clear(); };
+
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
+    void CreateDynamicOctree();
 
   private:
     std::string sceneName       = DEFAULT_SCENE_NAME;
@@ -185,6 +195,7 @@ class SOBRASADA_API_ENGINE Scene
     WindConfig* windConfig                       = nullptr;
     Octree* sceneOctree                          = nullptr;
     Octree* dynamicTree                          = nullptr;
+    DynamicOctree* dynamicOctree                 = nullptr;
 
     // IMGUI WINDOW DATA
     std::tuple<float, float> sceneWindowPosition = std::make_tuple(0.f, 0.f);
@@ -195,6 +206,9 @@ class SOBRASADA_API_ENGINE Scene
     bool dynamicModified                         = false;
 
     std::vector<GameObject*> gameObjectsToUpdateComponents;
+
+    // FOR DYNAMIC OCTREE
+    std::set<GameObject*> transformUpdatedGameObjects;
 
     std::set<UID> toUpdateGameObjectsSet;
     std::vector<GameObject*> toUpdateGameObjects;

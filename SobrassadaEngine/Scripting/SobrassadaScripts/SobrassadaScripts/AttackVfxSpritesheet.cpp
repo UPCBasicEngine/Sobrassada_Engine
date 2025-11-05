@@ -267,7 +267,7 @@ void AttackVfxSpritesheet::Reset()
         if (randomVariation)
         {
             int idx = rand() % (variationsToUse + 1);
-            GLOG("IDX: %d", idx);
+            //GLOG("IDX: %d", idx);
             if (idx == variationsToUse)
             {
                 currentImageUID = otherImageBindlessUID;

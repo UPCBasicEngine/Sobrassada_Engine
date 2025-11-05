@@ -246,11 +246,11 @@ bool InputModule::ShutDown()
 void InputModule::OnControllerConnected()
 {
     int numJoysticks = SDL_NumJoysticks();
-    GLOG("Detected %d joystick(s)", numJoysticks);
+    //GLOG("Detected %d joystick(s)", numJoysticks);
 
     if (numJoysticks > 0 && SDL_IsGameController(0))
     {
-        GLOG("Joystick 0 is a GameController");
+        //GLOG("Joystick 0 is a GameController");
         // Override always the controller at 0, we don't have coop
         controllers[0] = SDL_GameControllerOpen(0);
         if (controllers[0] == nullptr)
@@ -259,7 +259,7 @@ void InputModule::OnControllerConnected()
         }
         else
         {
-            GLOG("Controller 0 opened successfully!");
+            //GLOG("Controller 0 opened successfully!");
         }
     }
     else

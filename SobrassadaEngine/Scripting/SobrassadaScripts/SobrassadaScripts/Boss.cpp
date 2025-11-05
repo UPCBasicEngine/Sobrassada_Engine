@@ -734,14 +734,14 @@ void Boss::Update(float deltaTime)
 
 void Boss::OnPlayerExitLocation()
 {
-    GLOG("Exit");
+    //GLOG("Exit");
 
     waiting = true;
 }
 
 void Boss::OnPlayerEnterLocation()
 {
-    GLOG("Enter");
+    //GLOG("Enter");
 
     waiting = false;
 
@@ -1818,7 +1818,7 @@ void Boss::StartFall()
     fallSpeed         = heightJump / fallDuration;
     fallTimeRemaining = fallDuration;
     fallStartPosLocal = parent->GetLocalTransform().TranslatePart();
-    GLOG("Speed: %.2f", fallSpeed);
+    //GLOG("Speed: %.2f", fallSpeed);
 }
 
 void Boss::Fall(float deltaTime)
@@ -2450,7 +2450,7 @@ void Boss::ChangeMusic() const
 
     if (isDead)
     {
-        GLOG("OUTRO")
+        //GLOG("OUTRO")
         eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_OUTRO;
     }
     else
@@ -2458,22 +2458,22 @@ void Boss::ChangeMusic() const
         switch (phase)
         {
         case 1:
-            GLOG("PHASE 1")
+            //GLOG("PHASE 1")
             eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE1;
             break;
 
         case 2:
-            GLOG("PHASE 2")
+            //GLOG("PHASE 2")
             eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE2;
             break;
 
         case 3:
-            GLOG("PHASE 3")
+            //GLOG("PHASE 3")
             eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE3;
             break;
 
         default:
-            GLOG("Error: ChangeMusic")
+            //GLOG("Error: ChangeMusic")
             break;
         }
     }

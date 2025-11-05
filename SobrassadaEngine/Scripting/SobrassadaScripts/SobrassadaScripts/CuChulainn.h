@@ -79,6 +79,7 @@ class CuChulainn : public Character
         GLOG("Enemy out. Total unique enemies colliding: %zu", enemiesCont);
     }
     void ResetState();
+    void SethighlightIdleState(bool isForceIdle) { forceIdleState = isForceIdle; }
 
     void OnObjectDestroyed();
     void OnEnemyHit();
@@ -169,6 +170,7 @@ class CuChulainn : public Character
     ParticleSystemComponent* footstepParticles2    = nullptr;
     int stepIndex                                  = 0;
     bool isRightFoot                               = false;
+    bool forceIdleState                                = false;
 
     float defaultSpeed                             = 7.0f;
     float inputBuffer                              = 0.5f;
@@ -302,6 +304,10 @@ class CuChulainn : public Character
     float vfxTimeUnscaledSec                       = 0.0f;
     bool ultimateSoundPlayed                       = false;
     float ultimateSpeed                            = 1.3f;
+    GameObject* ultimateIconObj                        = nullptr;
+    bool ultimateblocked                               = false;
+    UID ultiBlockedImageUID                            = 0;
+    UID ultiUnlockedImageUID                           = 0;
 
     // Riastrad
     std::string riastradBarName                    = "BarFill";
@@ -433,6 +439,7 @@ class CuChulainn : public Character
     float curseDuration                            = 4.0f;
     float curseTimer                               = 0.0f;
     UID playerMaterial                             = 0;
+    float4 colorRiastrad                              = float4::one;
 
     float timeStopTimer                            = 0.0f;
     float hitTimeStopDuration                      = 0.05f;

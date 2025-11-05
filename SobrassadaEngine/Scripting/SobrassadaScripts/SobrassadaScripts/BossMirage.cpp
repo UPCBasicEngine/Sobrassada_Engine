@@ -14,7 +14,7 @@ BossMirage::BossMirage(GameObject* parent) : Script(parent)
         {"Trigger Sequence",
          [this](Script* self)
          {
-             GLOG("Triggering sequence: %d", currentSequence);
+             //GLOG("Triggering sequence: %d", currentSequence);
              StartSequence(currentSequence);
          }}
     );
@@ -116,7 +116,7 @@ void BossMirage::Update(float deltaTime)
                 // Activate all mirages with this weightOrder at once
                 for (GameObject* mirage : it->second)
                 {
-                    GLOG("Now playing mirage (weight %d): %s", currentWeightOrder, mirage->GetName().c_str());
+                    //GLOG("Now playing mirage (weight %d): %s", currentWeightOrder, mirage->GetName().c_str());
                     if (mirage) mirage->SetEnabled(true);
                 }
 

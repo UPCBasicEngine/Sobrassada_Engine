@@ -41,7 +41,7 @@ bool TileFloatScript::Init()
     if (parent->GetChildren().empty())
     {
         isSetupCorrectly = false;
-        GLOG("[ERROR] No movable tile as child found")
+        //GLOG("[ERROR] No movable tile as child found")
         return false;
     }
 

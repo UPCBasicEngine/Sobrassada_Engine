@@ -96,7 +96,7 @@ namespace FileSystem
 
         if (doc.HasParseError())
         {
-            GLOG("Failed to parse scene JSON: %s", scenePath);
+            //GLOG("Failed to parse scene JSON: %s", scenePath);
             return false;
         }
 
@@ -130,7 +130,7 @@ namespace FileSystem
     {
         if (!Exists(sourceFilePath))
         {
-            GLOG("Source file does not exist: %s", sourceFilePath);
+            //GLOG("Source file does not exist: %s", sourceFilePath);
             return false;
         }
 

@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "Octree.h"
 #include "Quadtree.h"
+#include "DynamicOctree.h"
 
 #include <vector>
 

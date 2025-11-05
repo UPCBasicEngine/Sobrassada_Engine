@@ -1,11 +1,13 @@
 #include "pch.h"
 
 #include "Application.h"
+#include "BatchManager.h"
 #include "GameObject.h"
 #include "LibraryModule.h"
 #include "Mirage.h"
 #include "MirageBossDash.h"
 #include "MirageVFX.h"
+#include "ResourcesModule.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "ShaderScriptComponent.h"
@@ -85,7 +87,7 @@ void Mirage::Update(float deltaTime)
         mirageDisableComponent2->SetEnabled(false);
         state      = MirageState::Warning;
         stateTimer = 0.0f;
-        GLOG("Calling gameobject");
+        /*GLOG("Calling gameobject");*/
 
         break;
     }
@@ -93,7 +95,7 @@ void Mirage::Update(float deltaTime)
     case MirageState::Warning:
     {
         stateTimer += deltaTime;
-        GLOG("Activating gameobject");
+        // GLOG("Activating gameobject");
 
         if (stateTimer >= warningDelay)
         {
@@ -128,6 +130,11 @@ void Mirage::Update(float deltaTime)
         {
             state = MirageState::Sleeping;
             parent->SetEnabled(false);
+
+            BatchManager* batchManager = AppEngine->GetResourcesModule()->GetBatchManager();
+
+            batchManager->RemoveBatch(mirageBorder->GetBatch());
+            batchManager->RemoveBatch(mirageArrow->GetBatch());
         }
         break;
     }
