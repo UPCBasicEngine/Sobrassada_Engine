@@ -74,11 +74,11 @@ void ResourceMaterial::OnEditorUpdate()
 
         if (updated)
         {
-            material.constantMovement   = useConstantMovement ? 1 : 0;
+            material.constantMovement   = useConstantMovement ? 1.0f : 0.0f;
             material.windUVParametersV0 = vCoord0;
             material.windUVParametersV1 = vCoord1;
-            material.windUVParametersV2 = useCentralPivot ? 1 : 0;
-            material.windUVParametersV3 = useWindGravity ? 1 : 0;
+            material.windUVParametersV2 = useCentralPivot ? 1.0f : 0.0f;
+            material.windUVParametersV3 = useWindGravity ? 1.0f : 0.0f;
             material.windTimeScale      = windTimeScale;
             material.windXAmplitude     = windXAmplitude;
             material.windYAmplitude     = windYAmplitude;
@@ -496,11 +496,11 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     material.shininess           = mat.GetGlossinessFactor();
     material.shininessInAlpha    = false;
 
-    material.constantMovement    = useConstantMovement ? 1 : 0;
+    material.constantMovement    = useConstantMovement ? 1.0f : 0.0f;
     material.windUVParametersV0  = vCoord0;
     material.windUVParametersV1  = vCoord1;
-    material.windUVParametersV2  = useCentralPivot ? 1 : 0;
-    material.windUVParametersV3  = useWindGravity ? 1 : 0;
+    material.windUVParametersV2  = useCentralPivot ? 1.0f : 0.0f;
+    material.windUVParametersV3  = useWindGravity ? 1.0f : 0.0f;
     material.windTimeScale       = windTimeScale;
     material.windXAmplitude      = windXAmplitude;
     material.windYAmplitude      = windYAmplitude;
