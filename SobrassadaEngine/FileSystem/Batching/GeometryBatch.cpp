@@ -301,8 +301,6 @@ void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bo
     );
 
     glBindVertexArray(0);
-
-    LockBuffer();
 }
 
 void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, std::vector<Command>& commands)
@@ -442,6 +440,8 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);
     }
+
+    LockBuffer();
 }
 
 void GeometryBatch::SwapBuffers()
@@ -477,9 +477,11 @@ void SOBRASADA_API_ENGINE GeometryBatch::UnbindMaterialsBuffer()
 
 void GeometryBatch::LockBuffer()
 {
-    if (gSync[currentBufferIndex])
+    const int nextBufferIndex = (currentBufferIndex + 1) % 3;
+
+    if (gSync[nextBufferIndex])
     {
-        glDeleteSync(gSync[currentBufferIndex]);
+        glDeleteSync(gSync[nextBufferIndex]);
     }
-    gSync[currentBufferIndex] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gSync[nextBufferIndex] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
