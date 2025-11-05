@@ -830,6 +830,7 @@ void RenderPass::ShadowMapPassRender(
         lightFrustum.UpdateFrustumPlanes(spotToRender[i]->GetViewMatrix(), spotToRender[i]->GetProjectionMatrix());
         // App->GetSceneModule()->GetScene()->CheckObjectsInFrustum(shadowObjectsToRenderSpot, lightFrustum, false);
 
+        // ALSO IF AN OBJECT CHANGES ITS RENDER SHADOW IT WONT GET ADDED, HAVE A LOOK AT THAT
         if (spotToRender[i]->GetStaticObjects().empty())
         {
             std::vector<GameObject*> staticObjects;
