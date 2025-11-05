@@ -15,9 +15,6 @@ struct UniformCache
     GLint isWireframe    = -1;
     GLint isAlpha        = -1;
     GLint windParameters = -1;
-    GLint windUVParams   = -1;
-    GLint windAmplitudes = -1;
-    GLint windFrequency  = -1;
     GLint cameraBlockIdx = -1;
     bool initialized     = false;
 };

@@ -32,6 +32,18 @@ struct Material
     uvec2 occlusionTex;
     float emissiveIntensity;
     float padding;
+    float windUVParametersV0;
+    float windUVParametersV1;
+    float windUVParametersV2;
+    float windUVParametersV3;
+    float windXAmplitude;
+    float windYAmplitude;
+    float windZAmplitude;
+    float constantMovement;
+    float windXFrequency;
+    float windYFrequency;
+    float windZFrequency;
+    float windTimeScale;
 };
 
 struct DirectionalLight

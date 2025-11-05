@@ -71,6 +71,22 @@ void ResourceMaterial::OnEditorUpdate()
         ImGui::SliderFloat("Wind speed (m/s)", &globalWindConfig->GetWindSpeedRef(), 0.0f, 10.f);
         ImGui::SliderFloat("Gust frequency (1/s)", &globalWindConfig->GetGustFrequencyRef(), .3f, 10.f);
         ImGui::SliderFloat("Gust speed (m/s)", &globalWindConfig->GetGustSpeedRef(), 0.0f, 20.f);
+
+        if (updated)
+        {
+            material.constantMovement   = useConstantMovement ? 1 : 0;
+            material.windUVParametersV0 = vCoord0;
+            material.windUVParametersV1 = vCoord1;
+            material.windUVParametersV2 = useCentralPivot ? 1 : 0;
+            material.windUVParametersV3 = useWindGravity ? 1 : 0;
+            material.windTimeScale      = windTimeScale;
+            material.windXAmplitude     = windXAmplitude;
+            material.windYAmplitude     = windYAmplitude;
+            material.windZAmplitude     = windZAmplitude;
+            material.windXFrequency     = windXFrequency;
+            material.windYFrequency     = windYFrequency;
+            material.windZFrequency     = windZFrequency;
+        }
     }
 
     if (ImGui::IsItemDeactivatedAfterEdit()) updated = true;
@@ -479,6 +495,19 @@ void ResourceMaterial::LoadMaterialData(const Material& mat, const rapidjson::Va
     material.specColor           = mat.GetSpecularFactor();
     material.shininess           = mat.GetGlossinessFactor();
     material.shininessInAlpha    = false;
+
+    material.constantMovement    = useConstantMovement ? 1 : 0;
+    material.windUVParametersV0  = vCoord0;
+    material.windUVParametersV1  = vCoord1;
+    material.windUVParametersV2  = useCentralPivot ? 1 : 0;
+    material.windUVParametersV3  = useWindGravity ? 1 : 0;
+    material.windTimeScale       = windTimeScale;
+    material.windXAmplitude      = windXAmplitude;
+    material.windYAmplitude      = windYAmplitude;
+    material.windZAmplitude      = windZAmplitude;
+    material.windXFrequency      = windXFrequency;
+    material.windYFrequency      = windYFrequency;
+    material.windZFrequency      = windZFrequency;
 
     ResourceTexture* diffTexture = TextureImporter::LoadTexture(mat.GetDiffuseTexture());
     if (diffTexture != nullptr)
