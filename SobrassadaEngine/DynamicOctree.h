@@ -3,6 +3,7 @@
 #include "Geometry/AABB.h"
 
 #include <set>
+#include <unordered_set>
 #include <stack>
 #include <vector>
 
@@ -71,6 +72,7 @@ class DynamicOctree
     int totalElements           = 0;
 
     std::vector<LineSegment> drawLines;
+    std::unordered_set<GameObject*> insideElements;
 };
 
 template <typename AreaType>

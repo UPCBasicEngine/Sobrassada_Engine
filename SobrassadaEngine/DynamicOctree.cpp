@@ -130,7 +130,7 @@ DynamicOctree::~DynamicOctree()
 
 bool DynamicOctree::InsertElement(GameObject* gameObject)
 {
-    if (gameObject == nullptr) return false;
+    if (gameObject == nullptr || insideElements.find(gameObject) != insideElements.end()) return false;
 
     std::stack<DynamicOctreeNode*> nodesToVisit;
     nodesToVisit.push(rootNode);
@@ -152,6 +152,7 @@ bool DynamicOctree::InsertElement(GameObject* gameObject)
                 {
                     if (currentNode->InsertElement(octreeElement))
                     {
+                        insideElements.insert(gameObject);
                         ++totalElements;
                         return true;
                     }
@@ -192,6 +193,8 @@ bool DynamicOctree::RemoveElement(GameObject* gameObject, bool goTransformed)
         {
             removed = true;
             --totalElements;
+            insideElements.erase(gameObject);
+
             if (currentNode->elements.size() <= currentNode->elementsCapacity)
                 nodeStates.insert({currentNode, std::make_pair(true, (int)currentNode->elements.size())});
             else nodeStates.insert({currentNode, std::make_pair(false, (int)currentNode->elements.size())});
@@ -215,6 +218,7 @@ bool DynamicOctree::RemoveElement(GameObject* gameObject, bool goTransformed)
                     {
                         --totalElements;
                         removed = currentNode->RemoveElement(octreeElement);
+                        insideElements.erase(gameObject);
 
                         // SAVE CURRENT STATE TO LATER CHECK IF MERGEABLE
                         if (currentNode->elements.size() <= currentNode->elementsCapacity)
@@ -414,6 +418,7 @@ void DynamicOctree::UpdateTree(std::set<GameObject*> movedGameObjects)
                 gameObjectsToAdd.push_back(gameObject);
             }
         }
+        else if (insideElements.find(gameObject) == insideElements.end()) gameObjectsToAdd.push_back(gameObject);
     }
 
     for (GameObject* gameObject : gameObjectsToAdd)

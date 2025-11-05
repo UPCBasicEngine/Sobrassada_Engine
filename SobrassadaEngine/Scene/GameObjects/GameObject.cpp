@@ -1374,6 +1374,8 @@ void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
         {
             visitedGameObjects.insert(currentUID);
             GameObject* currentGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
+            if (currentGameObject->IsStatic() && type == DYNAMIC)
+                App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
 
             currentGameObject->SetMobility(type);
             App->GetSceneModule()->AddGameObjectToUpdateComponents(currentGameObject);
@@ -1398,6 +1400,8 @@ void GameObject::UpdateMobilityHierarchy(MobilitySettings type)
             GameObject* currentGameObject = App->GetSceneModule()->GetScene()->GetGameObjectByUID(currentUID);
             if (currentGameObject)
             {
+                if (currentGameObject->IsStatic() && type == DYNAMIC)
+                    App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
                 currentGameObject->SetMobility(type);
                 App->GetSceneModule()->AddGameObjectToUpdateComponents(currentGameObject);
 
