@@ -47,13 +47,11 @@ void main()
         const vec4 clipSpace = projMatrix * vec4(samplePos, 1.0);
         const vec2 sampleUV = (clipSpace.xy/clipSpace.w) * 0.5 + 0.5;
 
-        if(sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0) continue;
+        float inBounds = step(0.0, sampleUV.x) * step(sampleUV.x, 1.0) *
+                         step(0.0, sampleUV.y) * step(sampleUV.y, 1.0);
         float sampleDepth = (viewMatrix * texture(gPositions, sampleUV)).z;
-
-        if(sampleDepth + bias > samplePos.z && abs(sampleDepth - position.z) < range)
-        {
-            ++occlusion;
-        }
+        float contrib = float(sampleDepth + bias > samplePos.z && abs(sampleDepth - position.z) < range);
+        occlusion += int(contrib * inBounds);
     }
 
     const float ao = 1.0 - float(occlusion) / float(KERNEL_SIZE);
