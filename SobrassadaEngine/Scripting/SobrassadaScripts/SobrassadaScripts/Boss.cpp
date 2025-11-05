@@ -2118,6 +2118,8 @@ void Boss::WaterSpouts()
 
 void Boss::ResetValues(bool changePhase)
 {
+    StopAttacking();
+
     doIdle                 = false;
     doTaunt                = false;
     actionTriggerDone      = false;

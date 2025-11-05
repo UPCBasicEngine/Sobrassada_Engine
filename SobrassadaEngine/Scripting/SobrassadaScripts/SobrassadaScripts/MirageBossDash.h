@@ -39,7 +39,7 @@ class MirageBossDash : public Character
   private:
     void HandleState(float deltaTime) override;
 
-    void Idle();
+    void Idle(float deltaTime);
 
     void OverheadStrike(float deltaTime);
     void StartDash();
