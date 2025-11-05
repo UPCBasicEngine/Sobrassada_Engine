@@ -300,6 +300,13 @@ void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bo
         static_cast<GLenum>(mode), GL_UNSIGNED_INT, (GLvoid*)0, static_cast<GLsizei>(commands.size()), 0
     );
 
+    const int readIdx = (currentBufferIndex + 2) % 3;
+    if (gSync[readIdx])
+    {
+        glDeleteSync(gSync[readIdx]);
+    }
+    gSync[readIdx] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
     glBindVertexArray(0);
 }
 
@@ -371,12 +378,14 @@ void GeometryBatch::WaitBuffer()
 void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender)
 {
     updatedOnce               = true;
+
     const int nextBufferIndex = (currentBufferIndex + 1) % 3;
+    const int readBufferIndex  = (currentBufferIndex + 2) % 3;
 
     if (hasBones)
     {
         const GLuint nextBuffer    = bones[nextBufferIndex];
-        const GLuint currentBuffer = bones[currentBufferIndex];
+        const GLuint currentBuffer = bones[readBufferIndex];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextBuffer);
 
@@ -407,7 +416,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
     else glUniform1i(7, 0); // meshes has no bones
 
     const GLuint nextBuffer    = models[nextBufferIndex];
-    const GLuint currentBuffer = models[currentBufferIndex];
+    const GLuint currentBuffer = models[readBufferIndex];
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextBuffer);
 
@@ -424,7 +433,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         windConfig->GetApplyWindGlobally() && doApplyWind)
     {
         const GLuint nextWindBuffer    = deltaWindDirections[nextBufferIndex];
-        const GLuint currentWindBuffer = deltaWindDirections[currentBufferIndex];
+        const GLuint currentWindBuffer = deltaWindDirections[readBufferIndex];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextWindBuffer);
 
