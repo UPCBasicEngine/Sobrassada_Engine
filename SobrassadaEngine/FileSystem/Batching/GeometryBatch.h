@@ -83,20 +83,20 @@ class GeometryBatch
     std::vector<AccMeshCount> uniqueMeshesCount;
 
     bool updatedOnce                    = false;
-    GLsync gSync[3]                     = {nullptr, nullptr, nullptr};
+    GLsync gSync[2]                     = {nullptr, nullptr};
     int currentBufferIndex              = 0;
 
-    GLuint models[3]                    = {0, 0, 0};
-    float4x4* ptrModels[3]              = {nullptr, nullptr, nullptr};
+    GLuint models[2]                    = {0, 0};
+    float4x4* ptrModels[2]              = {nullptr, nullptr};
     std::size_t modelsSize              = 0;
 
-    GLuint deltaWindDirections[3]       = {0, 0, 0};
-    float4* ptrDeltaWindDirections[3]   = {nullptr, nullptr, nullptr};
+    GLuint deltaWindDirections[2]       = {0, 0};
+    float4* ptrDeltaWindDirections[2]   = {nullptr, nullptr};
     std::size_t deltaWindDirectionsSize = 0;
 
-    GLuint bones[3]                     = {0, 0, 0};
+    GLuint bones[2]                     = {0, 0};
     GLuint bonesIndex                   = 0;
-    float4x4* ptrBones[3]               = {nullptr, nullptr, nullptr};
+    float4x4* ptrBones[2]               = {nullptr, nullptr};
     std::size_t bonesSize               = 0;
     std::size_t bonesIndexSize          = 0;
     std::vector<unsigned int> bonesCount;
