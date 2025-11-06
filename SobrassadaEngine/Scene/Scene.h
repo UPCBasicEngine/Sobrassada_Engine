@@ -169,6 +169,8 @@ class SOBRASADA_API_ENGINE Scene
     //void RemoveTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.erase(gameObject); };
     //void ClearTransformTransformUpdatedGameObjects() { transformUpdatedGameObjects.clear(); };
 
+    void SetResetStaticObjects();
+
   private:
     void CreateStaticSpatialDataStruct();
     void CreateDynamicSpatialDataStruct();
