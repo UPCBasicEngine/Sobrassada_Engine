@@ -284,8 +284,8 @@ void Scene::Init()
     toUpdateGameObjects.reserve(gameObjectsContainer.size());
 
     UpdateStaticSpatialStructure();
-    //UpdateDynamicSpatialStructure();
-    CreateDynamicOctree();
+    UpdateDynamicSpatialStructure();
+    // CreateDynamicOctree();
 
     isSceneLoaded = true;
 }
@@ -794,7 +794,7 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
         {
             SetDynamicModified();
 
-            dynamicOctree->RemoveElement(gameObject, false);
+            //dynamicOctree->RemoveElement(gameObject, false);
         }
 
         if (gameObject == nullptr) continue;
@@ -1180,8 +1180,9 @@ void Scene::UpdateDynamicOctree()
     transformUpdatedGameObjects.clear();
 }
 
-
-void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes, bool includeStatics) const
+void Scene::CheckObjectsInFrustum(
+    std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes, bool includeStatics
+) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsInFrustum", Optick::Category::GameLogic)
@@ -1190,9 +1191,9 @@ void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects
 
     if (includeStatics) sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
-    //dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+     dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
-    dynamicOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+    //dynamicOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
     for (auto gameObject : queriedObjects)
     {
@@ -1633,13 +1634,13 @@ void Scene::LoadPrefab(
         newObjects[0]->UpdateTransformForGOBranch();
 
         // ADD DYNAMICS TO TREE
-        for (int i = 0; i < newObjects.size(); ++i)
+        /*for (int i = 0; i < newObjects.size(); ++i)
         {
             AABB globalAABB = newObjects[i]->GetGlobalAABB();
             if (!newObjects[i]->IsStatic() && !globalAABB.IsDegenerate() && globalAABB.IsFinite() &&
                 !globalAABB.Size().IsZero())
                 dynamicOctree->InsertElement(newObjects[i]);
-        }
+        }*/
 
         // Get all scene lights, because if the prefab has lights when creating them they won't be added to the
         // scene, as the gameObject is still not part of the scene

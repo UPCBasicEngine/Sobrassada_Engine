@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Globals.h"
-
 #include <vector>
 #include <unordered_map>
 #include "glew.h"
@@ -15,9 +13,6 @@ struct UniformCache
     GLint isWireframe    = -1;
     GLint isAlpha        = -1;
     GLint windParameters = -1;
-    GLint windUVParams   = -1;
-    GLint windAmplitudes = -1;
-    GLint windFrequency  = -1;
     GLint cameraBlockIdx = -1;
     bool initialized     = false;
 };
@@ -29,7 +24,7 @@ class BatchManager
     ~BatchManager();
 
     void UnloadAllBatches();
-    void SOBRASADA_API_ENGINE RemoveBatch(GeometryBatch* batch);
+    void RemoveBatch(GeometryBatch* batch);
 
     void LoadData();
     void Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera, bool isWireframe);

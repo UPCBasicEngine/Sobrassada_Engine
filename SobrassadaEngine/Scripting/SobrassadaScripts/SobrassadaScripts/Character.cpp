@@ -115,7 +115,7 @@ bool Character::Init()
     }
     else
     {
-        GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
+        //GLOG("[WARNING - %s] No mesh object found in children", parent->GetName().c_str())
     }
 
     if (type != CharacterType::CuChulainn && type != CharacterType::Mirage)
