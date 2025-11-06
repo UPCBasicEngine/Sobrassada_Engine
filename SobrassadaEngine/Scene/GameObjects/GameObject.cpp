@@ -271,7 +271,7 @@ GameObject::GameObject(UID parentUID, GameObject* refObject)
 
     OnAABBUpdated();
 
-    if (mobilitySettings == DYNAMIC) App->GetSceneModule()->GetScene()->GetDynamicOctree()->InsertElement(this);
+    //if (mobilitySettings == DYNAMIC) App->GetSceneModule()->GetScene()->GetDynamicOctree()->InsertElement(this);
 }
 
 GameObject::GameObject(const rapidjson::Value& initialState) : uid(initialState["UID"].GetUint64())
@@ -287,9 +287,9 @@ GameObject::~GameObject()
         App->GetSceneModule()->GetScene()->RemoveFromTag(tags[i], this);
     }
 
-    App->GetSceneModule()->GetScene()->RemoveTransformUpdatedGameObject(this);
+    //App->GetSceneModule()->GetScene()->RemoveTransformUpdatedGameObject(this);
 
-    if (dynamicNode) App->GetSceneModule()->GetScene()->GetDynamicOctree()->RemoveElement(this, true);
+    //if (dynamicNode) App->GetSceneModule()->GetScene()->GetDynamicOctree()->RemoveElement(this, true);
 
     std::apply([](auto&... tupleVar) { ((delete tupleVar, tupleVar = nullptr), ...); }, compTuple);
 }
@@ -806,8 +806,8 @@ void GameObject::OnTransformUpdated()
     else
     {
         App->GetSceneModule()->GetScene()->SetDynamicModified();
-        if (!globalAABB.IsDegenerate() && globalAABB.IsFinite() && !globalAABB.Size().IsZero())
-            App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
+        //if (!globalAABB.IsDegenerate() && globalAABB.IsFinite() && !globalAABB.Size().IsZero())
+        //    App->GetSceneModule()->GetScene()->AddTransformUpdatedGameObject(this);
     }
 }
 

@@ -78,6 +78,11 @@ bool Banshee::Init()
 {
     Character::Init();
 
+    // DONT WANT TO UPDATE THE PREFAB -> 06/11/2025 1:14 AM
+
+    maxHealth = 5;
+    currentHealth = 5;
+
     agentAI = parent->GetComponent<AIAgentComponent*>();
     if (agentAI == nullptr) GLOG("AIAgent component not found for Banshee")
     else

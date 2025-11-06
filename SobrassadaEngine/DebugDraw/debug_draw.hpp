@@ -2666,7 +2666,7 @@ void line(DD_EXPLICIT_CONTEXT_ONLY(ContextHandle ctx,) ddVec3_In from, ddVec3_In
 
     if (DD_CONTEXT->debugLinesCount == DEBUG_DRAW_MAX_LINES)
     {
-        DEBUG_DRAW_OVERFLOWED("DEBUG_DRAW_MAX_LINES limit reached! Dropping further debug line draws.");
+        //DEBUG_DRAW_OVERFLOWED("DEBUG_DRAW_MAX_LINES limit reached! Dropping further debug line draws.");
         return;
     }
 

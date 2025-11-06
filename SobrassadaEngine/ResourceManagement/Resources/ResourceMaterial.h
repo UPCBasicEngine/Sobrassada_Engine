@@ -18,22 +18,34 @@ struct TextureInfo
 
 struct MaterialGPU
 {
-    float4 diffColor        = {1.0f, 0.0f, 0.0f, 1.0f};
-    float3 specColor        = {1.0f, 0.0f, 0.0f};
-    float shininess         = 500.0f;
-    bool shininessInAlpha   = false;
-    float metallicFactor    = 1.0f;
-    float roughnessFactor   = 1.0f;
-    uint64_t diffuseTex     = 0;
-    uint64_t specularTex    = 0;
-    uint64_t metallicTex    = 0;
-    uint64_t normalTex      = 0;
-    int hasSpecular         = 0;
-    int hasMetallic         = 0;
-    uint64_t emmisiveTex    = 0;
-    uint64_t occlusionTex   = 0;
-    float emissiveIntensity = 1.0f;
-    float padding           = 0;
+    float4 diffColor         = {1.0f, 0.0f, 0.0f, 1.0f};
+    float3 specColor         = {1.0f, 0.0f, 0.0f};
+    float shininess          = 500.0f;
+    bool shininessInAlpha    = false;
+    float metallicFactor     = 1.0f;
+    float roughnessFactor    = 1.0f;
+    uint64_t diffuseTex      = 0;
+    uint64_t specularTex     = 0;
+    uint64_t metallicTex     = 0;
+    uint64_t normalTex       = 0;
+    int hasSpecular          = 0;
+    int hasMetallic          = 0;
+    uint64_t emmisiveTex     = 0;
+    uint64_t occlusionTex    = 0;
+    float emissiveIntensity  = 1.0f;
+    float padding            = 0;
+    float windUVParametersV0 = 0;
+    float windUVParametersV1 = 0;
+    float windUVParametersV2 = 0;
+    float windUVParametersV3 = 0;
+    float windXAmplitude     = 1.0f;
+    float windYAmplitude     = 1.0f;
+    float windZAmplitude     = 1.0f;
+    float constantMovement   = 0;
+    float windXFrequency     = 1.0f;
+    float windYFrequency     = 1.0f;
+    float windZFrequency     = 1.0f;
+    float windTimeScale      = 1.0f;
 };
 
 class ResourceMaterial : public Resource
@@ -94,25 +106,25 @@ class ResourceMaterial : public Resource
     TextureInfo emmisiveTexture;
     TextureInfo occlusionTexture;
 
-    MaterialGPU material        = {};
-    bool isTransparent          = false;
-    bool isAlpha                = false;
-    bool doubleSided            = false;
-    bool hasNormal              = false;
-    bool applyWind              = false;
-    float vCoord0               = 0.0f;
-    float vCoord1               = 1.0f;
-    bool useCentralPivot        = false;
-    bool useWindGravity         = false;
-    bool useConstantMovement    = false;
-    float windXAmplitude        = 1.0f;
-    float windYAmplitude        = 1.0f;
-    float windZAmplitude        = 1.0f;
-    float windXFrequency        = 1.0f;
-    float windYFrequency        = 1.0f;
-    float windZFrequency        = 1.0f;
-    float windTimeScale         = 1.0f;
-    UID defaultTextureUID       = INVALID_UID;
+    MaterialGPU material     = {};
+    bool isTransparent       = false;
+    bool isAlpha             = false;
+    bool doubleSided         = false;
+    bool hasNormal           = false;
+    bool applyWind           = false;
+    float vCoord0            = 0.0f;
+    float vCoord1            = 1.0f;
+    bool useCentralPivot     = false;
+    bool useWindGravity      = false;
+    bool useConstantMovement = false;
+    float windXAmplitude     = 1.0f;
+    float windYAmplitude     = 1.0f;
+    float windZAmplitude     = 1.0f;
+    float windXFrequency     = 1.0f;
+    float windYFrequency     = 1.0f;
+    float windZFrequency     = 1.0f;
+    float windTimeScale      = 1.0f;
+    UID defaultTextureUID    = INVALID_UID;
 
-    bool wasUpdated             = false;
+    bool wasUpdated          = false;
 };

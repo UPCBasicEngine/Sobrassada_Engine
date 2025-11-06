@@ -14,11 +14,40 @@ uniform mat4 projLight;
 // x: currentTime (set to 0 disables the wind), y: wind speed, z: gust frequency, y: gust speed
 uniform vec4 windParameters;
 // x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
-uniform vec4 windUVParameters;
 // x: axis amplitude, y: axis amplitude, z: axis amplitude, w: use constant movement
-uniform vec4 windAmplitudes;
 // x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
-uniform vec4 windFrequency;
+
+struct Material
+{
+    vec4 diffColor;
+    vec3 specColor;
+    float shininess;
+    bool shininessInAlpha;
+    float metallicFactor;
+    float roughnessFactor;
+    uvec2 diffuseTex;
+    uvec2 specularTex;
+    uvec2 metallicTex;
+    uvec2 normalTex;
+    int hasSpecular;
+    int hasMetallic;
+    uvec2 emmisiveTex;
+    uvec2 occlusionTex;
+    float emissiveIntensity;
+    float padding;
+    float windUVParametersV0;
+    float windUVParametersV1;
+    float windUVParametersV2;
+    float windUVParametersV3;
+    float windXAmplitude;
+    float windYAmplitude;
+    float windZAmplitude;
+    float constantMovement;
+    float windXFrequency;
+    float windYFrequency;
+    float windZFrequency;
+    float windTimeScale;
+};
 
 layout(std140, row_major, binding = 0) uniform CameraMatrices
 {
@@ -28,6 +57,10 @@ layout(std140, row_major, binding = 0) uniform CameraMatrices
 
 readonly layout(std430, row_major, binding = 10) buffer Transforms {
     mat4 models[];
+};
+
+readonly layout(std430, binding = 11) buffer Materials {
+    Material materials[];
 };
 
 readonly layout(std430, row_major, binding = 12) buffer Bones {
@@ -53,6 +86,7 @@ void main()
 {
     instance_index = gl_BaseInstance;
     mat4 model = models[instance_index];
+    Material mat = materials[instance_index];
 
     //Camera position in World Space
     fragViewPos = vec3(inverse(viewMatrix)[3]);
@@ -77,6 +111,7 @@ void main()
     else
     {
     // windParameters: x: currentTime (set to 0 disables the wind), y: wind speed, z: gust frequency, y: gust speed
+
     // windUVParameters: x: v0 (no movement border), y: v1 (full movement border), z: use central pivot, w: use gravity
     // windAmplitudes: x: axis amplitude, y: axis amplitude, z: axis amplitude, w: use constant movement
     // windFrequency: x: axis frequency, y: axis frequency, z: axis frequency, w: time scale
@@ -85,12 +120,12 @@ void main()
 
         if (bool(windParameters.x))
         {
-            float adaptedYUV = bool(windAmplitudes.w) ? 1 : max(min(((1-uv0.y) - windUVParameters.x) / (windUVParameters.y - windUVParameters.x), 1), 0);
+            float adaptedYUV = bool(mat.constantMovement) ? 1 : max(min(((1-uv0.y) - mat.windUVParametersV0) / (mat.windUVParametersV1 - mat.windUVParametersV0), 1), 0);
 
             vec4 deltaWindDirection = deltaWindDirections[instance_index];
 
             // Gravity pulling parts further from origin down
-            if (bool(windUVParameters.w)) {
+            if (bool(mat.windUVParametersV3)) {
                 float distanceToPivotSq = pos.x * pos.x + pos.z * pos.z;
                 pos.y -= distanceToPivotSq * 0.1;
             }
@@ -98,19 +133,19 @@ void main()
             float gustStrength = max(0, sin((windParameters.x * 0.001) / windParameters.z));
 
             float combinedWindSpeed = windParameters.y + (gustStrength * windParameters.w);
-            float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1) * windFrequency.w;
+            float scaledTime = windParameters.x * 0.001 * (log(windParameters.y * 2) + 1) * mat.windTimeScale;
             float scaledWindSpeed = combinedWindSpeed;
 
-            vec3 sinOffsetPos = bool(windAmplitudes.w) ? vec3(0, 0, 0) : pos;
+            vec3 sinOffsetPos = bool(mat.constantMovement) ? vec3(0, 0, 0) : pos;
             float locationSinOffset = (model[3][0] + model[3][1] + model[3][2]) / 3 * scaledWindSpeed;
 
-            float offsetX = sin((sinOffsetPos.x + scaledTime + 1.0 - adaptedYUV) * windFrequency.x + locationSinOffset) * adaptedYUV * scaledWindSpeed * windAmplitudes.x;
-            float offsetY = sin((sinOffsetPos.y + scaledTime + 1.0 - adaptedYUV) * windFrequency.y + locationSinOffset) * adaptedYUV * scaledWindSpeed * windAmplitudes.y;
-            float offsetZ = sin((sinOffsetPos.z + scaledTime + 1.0 - adaptedYUV) * windFrequency.z + locationSinOffset) * adaptedYUV * scaledWindSpeed * windAmplitudes.z;
+            float offsetX = sin((sinOffsetPos.x + scaledTime + 1.0 - adaptedYUV) * mat.windXFrequency + locationSinOffset) * adaptedYUV * scaledWindSpeed * mat.windXAmplitude;
+            float offsetY = sin((sinOffsetPos.y + scaledTime + 1.0 - adaptedYUV) * mat.windYFrequency + locationSinOffset) * adaptedYUV * scaledWindSpeed * mat.windYAmplitude;
+            float offsetZ = sin((sinOffsetPos.z + scaledTime + 1.0 - adaptedYUV) * mat.windZFrequency + locationSinOffset) * adaptedYUV * scaledWindSpeed * mat.windZAmplitude;
 
             vec3 offset = vec3(offsetX, offsetY, offsetZ);
 
-            if (bool(windUVParameters.z)) {
+            if (bool(mat.windUVParametersV2)) {
                 pos += offset;
 
                 vec3 tempLocal = cross(deltaWindDirection.xyz, pos) + deltaWindDirection.w * pos;

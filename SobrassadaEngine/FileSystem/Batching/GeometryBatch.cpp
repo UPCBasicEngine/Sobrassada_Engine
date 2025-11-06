@@ -53,23 +53,20 @@ GeometryBatch::GeometryBatch(const MeshComponent* component)
     glGenBuffers(1, &indirect);
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
-    glGenBuffers(3, models);
-    glGenBuffers(3, deltaWindDirections);
+    glGenBuffers(2, models);
+    glGenBuffers(2, deltaWindDirections);
     if (hasBones)
     {
-        glGenBuffers(3, bones);
+        glGenBuffers(2, bones);
         glGenBuffers(1, &bonesIndex);
     }
     glGenBuffers(1, &materials);
     gSync[0]     = nullptr;
     gSync[1]     = nullptr;
-    gSync[2]     = nullptr;
     ptrModels[0] = nullptr;
     ptrModels[1] = nullptr;
-    ptrModels[2] = nullptr;
     ptrBones[0]  = nullptr;
     ptrBones[1]  = nullptr;
-    ptrBones[2]  = nullptr;
 }
 
 GeometryBatch::~GeometryBatch()
@@ -86,16 +83,16 @@ GeometryBatch::~GeometryBatch()
     glDeleteBuffers(1, &indirect);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
-    glDeleteBuffers(3, models);
-    glDeleteBuffers(3, deltaWindDirections);
-    glDeleteBuffers(3, bones);
+    glDeleteBuffers(2, models);
+    glDeleteBuffers(2, deltaWindDirections);
+    glDeleteBuffers(2, bones);
     glDeleteBuffers(1, &bonesIndex);
     glDeleteBuffers(1, &materials);
 }
 
 void GeometryBatch::CleanUp()
 {
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 2; i++)
     {
         if (gSync[i])
         {
@@ -201,8 +198,8 @@ void GeometryBatch::LoadData()
     modelsSize              = totalModels.size() * sizeof(float4x4);
     deltaWindDirectionsSize = totalModels.size() * sizeof(float4);
 
-    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-    for (int i = 0; i < 3; i++)
+    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT; // const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT; 
+    for (int i = 0; i < 2; i++)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
 
@@ -301,8 +298,6 @@ void GeometryBatch::Render(const std::vector<MeshComponent*>& meshesToRender, bo
     );
 
     glBindVertexArray(0);
-
-    LockBuffer();
 }
 
 void GeometryBatch::GenerateCommands(const std::vector<MeshComponent*>& meshes, std::vector<Command>& commands)
@@ -373,12 +368,14 @@ void GeometryBatch::WaitBuffer()
 void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRender)
 {
     updatedOnce               = true;
-    const int nextBufferIndex = (currentBufferIndex + 1) % 3;
+
+    const int nextBufferIndex = (currentBufferIndex + 1) % 2;
+    const int readBufferIndex  = (currentBufferIndex + 1) % 2;
 
     if (hasBones)
     {
         const GLuint nextBuffer    = bones[nextBufferIndex];
-        const GLuint currentBuffer = bones[currentBufferIndex];
+        const GLuint currentBuffer = bones[readBufferIndex];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextBuffer);
 
@@ -409,7 +406,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
     else glUniform1i(7, 0); // meshes has no bones
 
     const GLuint nextBuffer    = models[nextBufferIndex];
-    const GLuint currentBuffer = models[currentBufferIndex];
+    const GLuint currentBuffer = models[readBufferIndex];
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextBuffer);
 
@@ -426,7 +423,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         windConfig->GetApplyWindGlobally() && doApplyWind)
     {
         const GLuint nextWindBuffer    = deltaWindDirections[nextBufferIndex];
-        const GLuint currentWindBuffer = deltaWindDirections[currentBufferIndex];
+        const GLuint currentWindBuffer = deltaWindDirections[readBufferIndex];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextWindBuffer);
 
@@ -442,11 +439,13 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, currentWindBuffer);
         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 14, currentWindBuffer, 0, deltaWindDirectionsSize);
     }
+
+    LockBuffer();
 }
 
 void GeometryBatch::SwapBuffers()
 {
-    currentBufferIndex = (currentBufferIndex + 1) % 3;
+    currentBufferIndex = (currentBufferIndex + 1) % 2;
 }
 
 void GeometryBatch::BindBonesBuffer()
@@ -477,9 +476,11 @@ void SOBRASADA_API_ENGINE GeometryBatch::UnbindMaterialsBuffer()
 
 void GeometryBatch::LockBuffer()
 {
-    if (gSync[currentBufferIndex])
+    const int nextBufferIndex = (currentBufferIndex + 1) % 2;
+
+    if (gSync[nextBufferIndex])
     {
-        glDeleteSync(gSync[currentBufferIndex]);
+        glDeleteSync(gSync[nextBufferIndex]);
     }
-    gSync[currentBufferIndex] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gSync[nextBufferIndex] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
