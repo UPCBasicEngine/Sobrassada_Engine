@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Globals.h"
-
 #include <vector>
 #include <unordered_map>
 #include "glew.h"
@@ -26,7 +24,7 @@ class BatchManager
     ~BatchManager();
 
     void UnloadAllBatches();
-    void SOBRASADA_API_ENGINE RemoveBatch(GeometryBatch* batch);
+    void RemoveBatch(GeometryBatch* batch);
 
     void LoadData();
     void Render(const std::vector<MeshComponent*>& meshesToRender, CameraComponent* camera, bool isWireframe);

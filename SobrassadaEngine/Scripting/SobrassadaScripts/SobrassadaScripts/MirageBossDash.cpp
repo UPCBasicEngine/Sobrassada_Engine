@@ -71,7 +71,7 @@ void MirageBossDash::Idle(float deltaTime)
         currentAction = BossDashActions::Idle;
         doIdle        = false;
 
-        Attack(deltaTime);
+        
 
         if (animComponent) animComponent->UseTrigger("Idle");
     }
@@ -93,6 +93,8 @@ void MirageBossDash::OverheadStrike(float deltaTime)
         {
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Prepare");
+
+            Attack(deltaTime);
         }
         if (animComponent && animComponent->IsFinished())
         {
