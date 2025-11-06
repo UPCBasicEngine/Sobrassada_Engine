@@ -509,7 +509,7 @@ void SceneModule::InitAsyncScenePreLoad(const std::string& fullScenePath)
         [&fullScenePath]()
         {
             Scene* asyncPreLoadedScene = nullptr;
-            std::this_thread::sleep_for(std::chrono::seconds(5));
+            //std::this_thread::sleep_for(std::chrono::seconds(5));
             /*rapidjson::Document doc;
             if (FileSystem::LoadJSON(fullScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
             {
