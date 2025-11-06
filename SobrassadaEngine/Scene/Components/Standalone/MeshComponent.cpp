@@ -154,7 +154,11 @@ void MeshComponent::RenderEditorInspector()
 
     ImGui::SeparatorText("Mesh Component");
 
-    if(ImGui::Checkbox("Produce Shadows", &produceShadows)) BatchEditorMode();
+    if (ImGui::Checkbox("Produce Shadows", &produceShadows))
+    {
+        BatchEditorMode();
+        App->GetSceneModule()->ResetSpotlightStaticObjects();
+    }
 
     ImGui::Text(currentMeshName.c_str());
     ImGui::SameLine();

@@ -306,14 +306,19 @@ void SceneModule::AddGameObjectToUpdateComponents(GameObject* gameObject)
     loadedScene->AddGameObjectToUpdateComponents(gameObject);
 }
 
+void SceneModule::ResetSpotlightStaticObjects()
+{
+    if (loadedScene) loadedScene->SetResetStaticObjects();
+}
+
 void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard)
 {
     if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT] &&
         keyboard[SDL_SCANCODE_LSHIFT])
     {
         GameObject* selectedObject = RaycastController::GetRayIntersectionTrees(
-             App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicOctree()
-            //App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
+            App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicOctree()
+            // App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
         );
 
         if (selectedObject != nullptr)
@@ -326,8 +331,8 @@ void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* ke
     else if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT])
     {
         GameObject* selectedObject = RaycastController::GetRayIntersectionTrees(
-             App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicOctree()
-            //App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
+            App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicOctree()
+            // App->GetCameraModule()->CastCameraRay(), loadedScene->GetOctree(), loadedScene->GetDynamicTree()
         );
 
         if (selectedObject != nullptr) loadedScene->SetSelectedGameObject(selectedObject->GetUID());
@@ -485,11 +490,15 @@ void SceneModule::HandleTreesUpdates()
         if (loadedScene->IsStaticModified() && !inPlayMode)
         {
             loadedScene->UpdateStaticSpatialStructure();
+            
+            // CLEAR SPOTLIGHT OBJECTS!
+            loadedScene->SetResetStaticObjects();
+
         }
         if (loadedScene->IsDynamicModified())
         {
-            //loadedScene->UpdateDynamicSpatialStructure();
-             loadedScene->UpdateDynamicOctree();
+            // loadedScene->UpdateDynamicSpatialStructure();
+            loadedScene->UpdateDynamicOctree();
         }
 
         loadedScene->UpdateGameObjectsComponents();
@@ -509,7 +518,7 @@ void SceneModule::InitAsyncScenePreLoad(const std::string& fullScenePath)
         [&fullScenePath]()
         {
             Scene* asyncPreLoadedScene = nullptr;
-            //std::this_thread::sleep_for(std::chrono::seconds(5));
+            // std::this_thread::sleep_for(std::chrono::seconds(5));
             /*rapidjson::Document doc;
             if (FileSystem::LoadJSON(fullScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
             {
