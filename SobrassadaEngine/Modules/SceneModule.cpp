@@ -306,6 +306,11 @@ void SceneModule::AddGameObjectToUpdateComponents(GameObject* gameObject)
     loadedScene->AddGameObjectToUpdateComponents(gameObject);
 }
 
+void SceneModule::ResetSpotlightStaticObjects()
+{
+    if (loadedScene) loadedScene->SetResetStaticObjects();
+}
+
 void SceneModule::HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard)
 {
     if (mouseButtons[SDL_BUTTON_LEFT - 1] == KeyState::KEY_DOWN && !keyboard[SDL_SCANCODE_LALT] &&
@@ -485,6 +490,10 @@ void SceneModule::HandleTreesUpdates()
         if (loadedScene->IsStaticModified() && !inPlayMode)
         {
             loadedScene->UpdateStaticSpatialStructure();
+            
+            // CLEAR SPOTLIGHT OBJECTS!
+            loadedScene->SetResetStaticObjects();
+
         }
         if (loadedScene->IsDynamicModified())
         {
@@ -509,7 +518,7 @@ void SceneModule::InitAsyncScenePreLoad(const std::string& fullScenePath)
         [&fullScenePath]()
         {
             Scene* asyncPreLoadedScene = nullptr;
-            //std::this_thread::sleep_for(std::chrono::seconds(5));
+            // std::this_thread::sleep_for(std::chrono::seconds(5));
             /*rapidjson::Document doc;
             if (FileSystem::LoadJSON(fullScenePath.c_str(), doc) && doc.HasMember("Scene") && doc["Scene"].IsObject())
             {
