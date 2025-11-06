@@ -45,19 +45,39 @@ class SpotLightComponent : public LightComponent
     void SetStaticObjects(const std::vector<GameObject*>& objects) { staticObjects = objects; }
     void ClearStaticObjects() { staticObjects.clear(); }
 
+    unsigned int GetStaticShadowMap() const { return staticSpotShadowMap; }
+    uint64_t GetStaticShadowMapGPU() const { return staticSpotShadowMapGPU; }
+    uint64_t GetStoredShadowMapGPU() const { return staticSpotShadowMapGPU; }
+
+    bool GetIsStaticVolumetric() const { return isStaticVolumetric; }
+
+    bool GetStaticVolumetricRendered() const { return staticRendered; }
+    void SetVolumetricRendered(bool hasRendered) { staticRendered = hasRendered; }
+    void SetArrayGPUStored(uint64_t gpuStore) { arrayGPUStored = gpuStore; }
+
   private:
     void UpdateLocalAABB();
+    void CreateStaticShadowMap();
+    void DeleteStaticShadowMap();
 
   private:
     float range;
     float innerAngle;
     float outerAngle;
     float radius;
-    bool renderVolumetrics = false;
-    float anisotropy       = 0.5f;
+    bool renderVolumetrics           = false;
+    float anisotropy                 = 0.5f;
 
-    int shadowGPUIndex     = -1;
+    int shadowGPUIndex               = -1;
+    unsigned int staticSpotShadowMap = 0;
+
+    uint64_t staticSpotShadowMapGPU  = 0;
+    uint64_t arrayGPUStored          = 0;
+
     Frustum spotCamera;
+
+    bool isStaticVolumetric = false;
+    bool staticRendered     = false;
 
     std::vector<GameObject*> staticObjects;
 };

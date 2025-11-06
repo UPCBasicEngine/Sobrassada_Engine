@@ -7,6 +7,7 @@
 #include "Framebuffer.h"
 #include "LibraryModule.h"
 #include "OpenGLModule.h"
+#include "RenderPass.h"
 #include "ResourceTexture.h"
 #include "ResourcesModule.h"
 #include "SceneModule.h"
@@ -123,7 +124,14 @@ void LightsConfig::ResetSpotShadowIndexes()
 {
     for (SpotLightComponent* spot : spotLights)
     {
-        spot->SetShadowGPUIndex(-1);
+        if (!spot->GetIsStaticVolumetric())
+        {
+            App->GetSceneModule()->GetScene()->GetRenderPass()->SetReservedGPUTexture(
+                spot->GetShadowGPUIndex(), ReservedGPUState::FREE
+            );
+
+            spot->SetShadowGPUIndex(-1);
+        }
     }
 }
 
@@ -132,6 +140,7 @@ void LightsConfig::ResetSpotStaticObjects()
     for (SpotLightComponent* spot : spotLights)
     {
         spot->ClearStaticObjects();
+        if (spot->GetIsStaticVolumetric()) spot->SetVolumetricRendered(false);
     }
 }
 
@@ -547,7 +556,9 @@ void LightsConfig::SetVolumetricAreaShaderData() const
         if (volumetricAreas[i] && volumetricAreas[i]->IsEffectivelyEnabled())
         {
             volumetrics.emplace_back(Lights::VolumetricAreaShaderData(
-                float4(volumetricAreas[i]->GetGlobalTransform().TranslatePart(), (int)volumetricAreas[i]->GetAreaType()),
+                float4(
+                    volumetricAreas[i]->GetGlobalTransform().TranslatePart(), (int)volumetricAreas[i]->GetAreaType()
+                ),
                 float4(volumetricAreas[i]->GetSize(), 1.0f)
             ));
         }
@@ -570,7 +581,7 @@ void LightsConfig::AddDirectionalLight(DirectionalLightComponent* newDirectional
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(newDirectional->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -582,7 +593,7 @@ void LightsConfig::AddPointLight(PointLightComponent* newPoint)
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(newPoint->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -603,7 +614,7 @@ void LightsConfig::AddSpotLight(SpotLightComponent* newSpot)
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(newSpot->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -625,7 +636,7 @@ void LightsConfig::AddVolumetricArea(VolumetricAreaComponent* newVol)
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(newVol->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -641,7 +652,7 @@ void LightsConfig::RemoveDirectionalLight(DirectionalLightComponent* directional
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(directional->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -653,7 +664,7 @@ void LightsConfig::RemovePointLight(PointLightComponent* point)
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(point->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -682,7 +693,7 @@ void LightsConfig::RemoveSpotLight(SpotLightComponent* spot)
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(spot->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 
@@ -714,7 +725,7 @@ void LightsConfig::RemoveVolumetricArea(VolumetricAreaComponent* vol)
     // Check that the gameObject is in the current scene (to avoid including prefab lights)
     if (App->GetSceneModule()->GetScene()->GetGameObjectByUID(vol->GetParentUID()) == nullptr)
     {
-        //GLOG("The gameObject is not in the current scene, probably a prefab");
+        // GLOG("The gameObject is not in the current scene, probably a prefab");
         return;
     }
 

@@ -55,6 +55,12 @@ struct FXAAParameters
     float localThreshold  = 0.16f;
 };
 
+enum class ReservedGPUState : int
+{
+    FREE,
+    RESERVED
+};
+
 class RenderPass
 {
   public:
@@ -83,6 +89,9 @@ class RenderPass
 
     FXAAParameters GetFXAAParameters() const { return fxaaParameters; }
     void SetFXAAParameters(const FXAAParameters& params) { fxaaParameters = params; }
+
+    void ReplaceShadowGPUTexture(int index, uint64_t gpuTexture);
+    void SetReservedGPUTexture(int index, ReservedGPUState gpuTexture);
 
   private:
     void Bind() const;
@@ -163,6 +172,8 @@ class RenderPass
     // SpotLight Shadows
     unsigned int spotShadowMaps[TotalShadowMaps]    = {0};
     unsigned int spotShadowMapsGPU[TotalShadowMaps] = {0};
+
+    ReservedGPUState reservedSpotShadowMapsGPU[TotalShadowMaps] = {ReservedGPUState::FREE};
 
     // Tile Shading
     unsigned int visibleLightIndicesSSBO            = 0;

@@ -218,6 +218,16 @@ void RenderPass::LoadData(const rapidjson::Value& initialState)
     }
 }
 
+void RenderPass::ReplaceShadowGPUTexture(int index, uint64_t gpuTexture)
+{
+    spotShadowMapsGPU[index] = gpuTexture;
+}
+
+void RenderPass::SetReservedGPUTexture(int index, ReservedGPUState gpuTexture)
+{
+    reservedSpotShadowMapsGPU[index] = gpuTexture;
+}
+
 void RenderPass::Bind() const
 {
     framebuffer->Bind();
@@ -823,6 +833,24 @@ void RenderPass::ShadowMapPassRender(
     for (int i = 0; i < TotalShadowMaps && i < spotToRender.size(); ++i)
     {
         if (!spotToRender[i] || (spotToRender[i] && !spotToRender[i]->GetRenderVolumetric())) continue;
+        if (spotToRender[i]->GetIsStaticVolumetric() && spotToRender[i]->GetStaticVolumetricRendered()) continue;
+
+        int validShadowIndex = -1;
+
+        for (int reservedIndex = 0; reservedIndex < TotalShadowMaps; ++reservedIndex)
+        {
+            if (reservedSpotShadowMapsGPU[reservedIndex] == ReservedGPUState::FREE)
+            {
+                validShadowIndex = reservedIndex;
+                break;
+            }
+        }
+
+        // ALL SPOTLIGHTS ARE RENDERED / RESERVED !!!!
+        if (validShadowIndex < 0) return;
+
+        // RESERVE
+        reservedSpotShadowMapsGPU[validShadowIndex] = ReservedGPUState::RESERVED;
 
         meshesToRender.clear();
         shadowObjectsToRenderSpot.clear();
@@ -862,8 +890,21 @@ void RenderPass::ShadowMapPassRender(
 
         if (meshesToRender.size() < 1) continue;
 
-        glBindTexture(GL_TEXTURE_2D, spotShadowMaps[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotShadowMaps[i], 0);
+        if (!spotToRender[i]->GetIsStaticVolumetric())
+        {
+            glBindTexture(GL_TEXTURE_2D, spotShadowMaps[validShadowIndex]);
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotShadowMaps[validShadowIndex], 0
+            );
+        }
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, spotToRender[i]->GetStaticShadowMap());
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, spotToRender[i]->GetStaticShadowMap(), 0
+            );
+        }
+
         glClear(GL_DEPTH_BUFFER_BIT);
 
         lightmatrices.viewMatrix       = spotToRender[i]->GetViewMatrix();
@@ -874,10 +915,19 @@ void RenderPass::ShadowMapPassRender(
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // LOADING SPOTLIGHT SHADOW TO SSBO
-        spotToRender[i]->SetShadowGPUIndex(i);
+
         SpotlightShadow currentShadow;
         currentShadow.viewProjection = spotToRender[i]->GetViewProjection().Transposed();
-        currentShadow.shadowMap      = spotShadowMapsGPU[i];
+
+        if (spotToRender[i]->GetIsStaticVolumetric())
+        {
+            spotToRender[i]->SetVolumetricRendered(true);
+            spotToRender[i]->SetArrayGPUStored(spotShadowMapsGPU[validShadowIndex]);
+            spotShadowMapsGPU[validShadowIndex] = spotToRender[i]->GetStaticShadowMapGPU();
+        }
+
+        spotToRender[i]->SetShadowGPUIndex(validShadowIndex);
+        currentShadow.shadowMap = spotShadowMapsGPU[validShadowIndex];
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, spotShadowSSBO);
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(SpotlightShadow) * i, sizeof(SpotlightShadow), &currentShadow);

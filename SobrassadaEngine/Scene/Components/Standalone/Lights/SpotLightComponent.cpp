@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "DebugDrawModule.h"
 #include "GameObject.h"
+#include "RenderPass.h"
 #include "SceneModule.h"
 
 #include "ImGui.h"
@@ -58,6 +59,14 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
     {
         anisotropy = initialState["anisotropy"].GetFloat();
     }
+    if (initialState.HasMember("isStaticVolumetric"))
+    {
+        isStaticVolumetric = initialState["isStaticVolumetric"].GetBool();
+    }
+    if (initialState.HasMember("staticRendered"))
+    {
+        staticRendered = initialState["staticRendered"].GetBool();
+    }
 
     // if (!camera) camera = new CameraComponent(GenerateUID(), parent);
 
@@ -79,11 +88,14 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
     radius                         = range * tan(outerRads);
 
     UpdateLocalAABB();
+
+    if (isStaticVolumetric) CreateStaticShadowMap();
 }
 
 SpotLightComponent::~SpotLightComponent()
 {
     App->GetSceneModule()->GetScene()->GetLightsConfig()->RemoveSpotLight(this);
+    if (isStaticVolumetric) DeleteStaticShadowMap();
 }
 
 void SpotLightComponent::Init()
@@ -100,6 +112,9 @@ void SpotLightComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("OuterAngle", outerAngle, allocator);
     targetState.AddMember("renderVolumetrics", renderVolumetrics, allocator);
     targetState.AddMember("anisotropy", anisotropy, allocator);
+
+    targetState.AddMember("isStaticVolumetric", isStaticVolumetric, allocator);
+    targetState.AddMember("staticRendered", staticRendered, allocator);
 }
 
 void SpotLightComponent::Clone(const Component* other)
@@ -154,6 +169,8 @@ void SpotLightComponent::ParentUpdated()
     spotCamera.up                  = -Cross(spotCamera.front, tempVec).Normalized();
 
     UpdateLocalAABB();
+
+    if (isStaticVolumetric && staticRendered) staticRendered = false;
 }
 
 void SpotLightComponent::RenderEditorInspector()
@@ -200,6 +217,19 @@ void SpotLightComponent::RenderEditorInspector()
     ImGui::Text("Volumetrics parameters");
 
     ImGui::Checkbox("Render volumetrics", &renderVolumetrics);
+    if (ImGui::Checkbox("Static volumetric", &isStaticVolumetric))
+    {
+        if (isStaticVolumetric)
+        {
+            CreateStaticShadowMap();
+        }
+        else
+        {
+            DeleteStaticShadowMap();
+        }
+
+        staticRendered = false;
+    }
     ImGui::DragFloat("Spot Anisotropy", &anisotropy, 0.01f, -0.99f, 0.99f);
 
     if (requireAABBUpdate) UpdateLocalAABB();
@@ -257,15 +287,50 @@ const float3 SpotLightComponent::GetDirection()
     return (parent->GetGlobalTransform().RotatePart() * -float3::unitY).Normalized();
 }
 
+void SpotLightComponent::CreateStaticShadowMap()
+{
+    glGenTextures(1, &staticSpotShadowMap);
+
+    glBindTexture(GL_TEXTURE_2D, staticSpotShadowMap);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SpotLightShadowMapSize, SpotLightShadowMapSize, 0, GL_DEPTH_COMPONENT,
+        GL_FLOAT, nullptr
+    );
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    shadowGPUIndex = glGetTextureHandleARB(staticSpotShadowMap);
+    glMakeTextureHandleResidentARB(shadowGPUIndex);
+}
+
+void SpotLightComponent::DeleteStaticShadowMap()
+{
+    glMakeTextureHandleNonResidentARB(shadowGPUIndex);
+    glDeleteTextures(1, &staticSpotShadowMap);
+
+    // FREE INDEX FROM RENDER PASS
+    if (shadowGPUIndex > 0)
+    {
+        App->GetSceneModule()->GetScene()->GetRenderPass()->SetReservedGPUTexture(
+            shadowGPUIndex, ReservedGPUState::FREE
+        );
+
+        App->GetSceneModule()->GetScene()->GetRenderPass()->ReplaceShadowGPUTexture(shadowGPUIndex, arrayGPUStored);
+    }
+}
+
 void SpotLightComponent::UpdateLocalAABB()
 {
-    float3 halfSize    = spotCamera.MinimalEnclosingAABB().HalfSize();
+    float3 halfSize     = spotCamera.MinimalEnclosingAABB().HalfSize();
 
     float3 offset       = parent->GetGlobalPostition() - spotCamera.pos;
 
-    AABB temp          = AABB(-halfSize + offset, offset + halfSize);
+    AABB temp           = AABB(-halfSize + offset, offset + halfSize);
 
-    float3 forward = spotCamera.front.Normalized();
+    float3 forward      = spotCamera.front.Normalized();
     float3 centerOffset = forward * (range * 0.5f);
     temp.Translate(centerOffset);
 
