@@ -194,6 +194,8 @@ class Boss : public Character
     int shieldStrikeLastAction                           = 0;
     float chaseTimer                                     = 0.0f;
     bool audioPlayed                                     = false;
+    float3 startStrikesPosition                          = float3::zero;
+    float3 strikesPosition                               = float3::zero;
 
     // OverheadStrike
     std::string closeAreaName                            = "";

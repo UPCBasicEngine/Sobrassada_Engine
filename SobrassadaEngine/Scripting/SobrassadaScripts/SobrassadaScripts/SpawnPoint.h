@@ -2,6 +2,7 @@
 
 #include "Script.h"
 
+class ParticleSystemComponent;
 class GameObject;
 class CharacterControllerComponent;
 
@@ -20,10 +21,12 @@ class SpawnPoint : public Script
     std::string playerName   = "";
     std::string treeName     = "EN_TreeOfLife";
     std::string leafsName    = "Tree_Leaves";
+    std::string particleName = "TOL_Leaf";
     const GameObject* player = nullptr;
     bool isOneUse            = false;
     int setHealth            = 0;
     bool activated           = false;
     GameObject* tree        = nullptr;
     GameObject* leafs        = nullptr;
+    ParticleSystemComponent* particleSystem     = nullptr;
 };

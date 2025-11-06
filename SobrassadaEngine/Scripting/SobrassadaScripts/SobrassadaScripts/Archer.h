@@ -201,6 +201,7 @@ class Archer : public Character
     static bool triggered;
   float3 lastDangerPosition          = float3::zero;
   float dangerStuckTimer             = 0.0f;
+  float highlightTimer               = 0.0f;
 
 
 };
