@@ -10,7 +10,7 @@ out vec4 fragColor;
 void main()
 {
 
-    float alpha = pow(1 - abs(dot(normalize(normal), vec3(0, 0, 1))), 3.140);
+    float alpha = pow(1 - abs(dot(normalize(normal), vec3(0, 0, 1))), 1.640);
 
     fragColor = vec4(color * vec3(alpha), alpha);
 }
