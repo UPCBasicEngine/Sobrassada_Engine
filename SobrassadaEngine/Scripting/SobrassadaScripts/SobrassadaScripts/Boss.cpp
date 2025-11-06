@@ -734,14 +734,14 @@ void Boss::Update(float deltaTime)
 
 void Boss::OnPlayerExitLocation()
 {
-    //GLOG("Exit");
+    // GLOG("Exit");
 
     waiting = true;
 }
 
 void Boss::OnPlayerEnterLocation()
 {
-    //GLOG("Enter");
+    // GLOG("Enter");
 
     waiting = false;
 
@@ -988,8 +988,6 @@ void Boss::ChooseNextStateFirstPhase()
         break;
     }
 
-    shieldStrikesRate = -1;
-
     int num           = uniformDist(rng);
     if (doTaunt)
     {
@@ -1057,10 +1055,6 @@ void Boss::ChooseNextStateSecondPhase()
         waterSpoutsRate   = 100;
         break;
     }
-    // FOR TESTING
-    // waterSpoutsRate   = -1;
-    // shieldStrikesRate = -1;
-    // shieldBlastRate   = -1;
 
     int num = uniformDist(rng);
     if (doTaunt)
@@ -1349,13 +1343,15 @@ void Boss::ShieldStrikes(float deltaTime)
         {
             agentAI->ResumeMovement();
             Run();
-            actionTriggerDone = true;
-            chaseTimer        = 0.0f;
+            actionTriggerDone    = true;
+            chaseTimer           = 0.0f;
+            startStrikesPosition = parent->GetGlobalTransform().TranslatePart();
         }
         else
         {
             Run();
-            chaseTimer += deltaTime;
+            chaseTimer      += deltaTime;
+            strikesPosition  = parent->GetGlobalTransform().TranslatePart();
         }
 
         agentAI->SetPathNavigation(character->GetLastPosition());
@@ -1389,6 +1385,12 @@ void Boss::ShieldStrikes(float deltaTime)
             default:
                 break;
             }
+        }
+        else if (chaseTimer >= 0.2f && strikesPosition.Equals(startStrikesPosition))
+        {
+            agentAI->PauseMovement();
+            stateEnter   = true;
+            currentState = ChooseAlternativeState();
         }
         break;
 
@@ -1818,7 +1820,7 @@ void Boss::StartFall()
     fallSpeed         = heightJump / fallDuration;
     fallTimeRemaining = fallDuration;
     fallStartPosLocal = parent->GetLocalTransform().TranslatePart();
-    //GLOG("Speed: %.2f", fallSpeed);
+    // GLOG("Speed: %.2f", fallSpeed);
 }
 
 void Boss::Fall(float deltaTime)
@@ -2373,6 +2375,12 @@ void Boss::SetState(BossStates newState)
     {
         repeatedState = maxRepeats;
     }
+    if (currentState == BossStates::Mirage)
+    {
+        currentState = BossStates::ShieldStrikes;
+        currentState = ChooseAlternativeState();
+        return;
+    }
 
     if (newState == actualState)
     {
@@ -2452,7 +2460,7 @@ void Boss::ChangeMusic() const
 
     if (isDead)
     {
-        //GLOG("OUTRO")
+        // GLOG("OUTRO")
         eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_OUTRO;
     }
     else
@@ -2460,22 +2468,22 @@ void Boss::ChangeMusic() const
         switch (phase)
         {
         case 1:
-            //GLOG("PHASE 1")
+            // GLOG("PHASE 1")
             eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE1;
             break;
 
         case 2:
-            //GLOG("PHASE 2")
+            // GLOG("PHASE 2")
             eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE2;
             break;
 
         case 3:
-            //GLOG("PHASE 3")
+            // GLOG("PHASE 3")
             eventID = AK::EVENTS::SET_LEVELSTATE_BOSS_PHASE3;
             break;
 
         default:
-            //GLOG("Error: ChangeMusic")
+            // GLOG("Error: ChangeMusic")
             break;
         }
     }
