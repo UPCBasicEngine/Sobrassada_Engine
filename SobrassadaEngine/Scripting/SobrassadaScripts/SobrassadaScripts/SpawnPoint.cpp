@@ -4,11 +4,11 @@
 
 #include "CuChulainn.h"
 #include "GameObject.h"
+#include "ParticleSystemComponent.h"
 #include "Scene.h"
 #include "SceneModule.h"
 #include "ScriptComponent.h"
 #include "Wwise_IDs.h"
-#include "Standalone/AnimController.h"
 #include "Standalone/AnimationComponent.h"
 #include "Standalone/Audio/AudioSourceComponent.h"
 #include "Standalone/Physics/CubeColliderComponent.h"
@@ -18,6 +18,7 @@ SpawnPoint::SpawnPoint(GameObject* parent) : Script(parent)
     fields.push_back({"Player name", InspectorField::FieldType::InputText, &playerName});
     fields.push_back({"Tree name", InspectorField::FieldType::InputText, &treeName});
     fields.push_back({"Leafs name", InspectorField::FieldType::InputText, &leafsName});
+    fields.push_back({"Particle name", InspectorField::FieldType::InputText, &particleName});
     fields.push_back({"Set only once", InspectorField::FieldType::Bool, &isOneUse});
     fields.push_back({"Set Health for player", InspectorField::FieldType::Int, &setHealth});
 }
@@ -74,6 +75,14 @@ bool SpawnPoint::Init()
 
     leafs->SetEnabled(false);
 
+    if (GameObject* atomObject = tree->GetChildGameObjectByName(particleName))
+    {
+        particleSystem = atomObject->GetComponent<ParticleSystemComponent*>();
+        if (particleSystem) particleSystem->StopInstances();
+        else GLOG("[WARNING] Particle component not found for ToL")
+    }
+    else GLOG("[WARNING] Particle object not found for ToL")
+
     return true;
 }
 
@@ -92,6 +101,8 @@ void SpawnPoint::OnCollision(GameObject* otherObject, const float3 collisionNorm
                 leafs->SetEnabled(true);
                 animComp->OnPlay(false, false);
             }
+
+            if (particleSystem) particleSystem->Init();
 
             if (AudioSourceComponent* audioComp = parent->GetComponent<AudioSourceComponent*>(); audioComp != nullptr)
                 audioComp->EmitEvent(AK::EVENTS::PLAY_SFX_TREEOFLIFE_02);
