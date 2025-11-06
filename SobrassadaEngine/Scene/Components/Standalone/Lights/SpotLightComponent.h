@@ -46,13 +46,14 @@ class SpotLightComponent : public LightComponent
     void ClearStaticObjects() { staticObjects.clear(); }
 
     unsigned int GetStaticShadowMap() const { return staticSpotShadowMap; }
+
     uint64_t GetStaticShadowMapGPU() const { return staticSpotShadowMapGPU; }
-    uint64_t GetStoredShadowMapGPU() const { return staticSpotShadowMapGPU; }
+    uint64_t GetStoredShadowMapGPU() const { return arrayGPUStored; }
 
     bool GetIsStaticVolumetric() const { return isStaticVolumetric; }
 
     bool GetStaticVolumetricRendered() const { return staticRendered; }
-    void SetVolumetricRendered(bool hasRendered) { staticRendered = hasRendered; }
+    void SetVolumetricRendered(bool hasRendered);
     void SetArrayGPUStored(uint64_t gpuStore) { arrayGPUStored = gpuStore; }
 
   private:

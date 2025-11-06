@@ -849,9 +849,6 @@ void RenderPass::ShadowMapPassRender(
         // ALL SPOTLIGHTS ARE RENDERED / RESERVED !!!!
         if (validShadowIndex < 0) return;
 
-        // RESERVE
-        reservedSpotShadowMapsGPU[validShadowIndex] = ReservedGPUState::RESERVED;
-
         meshesToRender.clear();
         shadowObjectsToRenderSpot.clear();
 
@@ -889,6 +886,9 @@ void RenderPass::ShadowMapPassRender(
         }
 
         if (meshesToRender.size() < 1) continue;
+
+        // RESERVE
+        reservedSpotShadowMapsGPU[validShadowIndex] = ReservedGPUState::RESERVED;
 
         if (!spotToRender[i]->GetIsStaticVolumetric())
         {

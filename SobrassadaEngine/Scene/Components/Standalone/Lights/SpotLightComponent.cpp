@@ -63,10 +63,6 @@ SpotLightComponent::SpotLightComponent(const rapidjson::Value& initialState, Gam
     {
         isStaticVolumetric = initialState["isStaticVolumetric"].GetBool();
     }
-    if (initialState.HasMember("staticRendered"))
-    {
-        staticRendered = initialState["staticRendered"].GetBool();
-    }
 
     // if (!camera) camera = new CameraComponent(GenerateUID(), parent);
 
@@ -114,7 +110,6 @@ void SpotLightComponent::Save(rapidjson::Value& targetState, rapidjson::Document
     targetState.AddMember("anisotropy", anisotropy, allocator);
 
     targetState.AddMember("isStaticVolumetric", isStaticVolumetric, allocator);
-    targetState.AddMember("staticRendered", staticRendered, allocator);
 }
 
 void SpotLightComponent::Clone(const Component* other)
@@ -170,7 +165,20 @@ void SpotLightComponent::ParentUpdated()
 
     UpdateLocalAABB();
 
-    if (isStaticVolumetric && staticRendered) staticRendered = false;
+    if (isStaticVolumetric)
+    {
+        staticRendered = false;
+
+        // FREE INDEX FROM RENDER PASS
+        if (shadowGPUIndex > -1)
+        {
+            App->GetSceneModule()->GetScene()->GetRenderPass()->SetReservedGPUTexture(
+                shadowGPUIndex, ReservedGPUState::FREE
+            );
+
+            App->GetSceneModule()->GetScene()->GetRenderPass()->ReplaceShadowGPUTexture(shadowGPUIndex, arrayGPUStored);
+        }
+    }
 }
 
 void SpotLightComponent::RenderEditorInspector()
@@ -221,6 +229,12 @@ void SpotLightComponent::RenderEditorInspector()
     {
         if (isStaticVolumetric)
         {
+            if (shadowGPUIndex > -1)
+            {
+                App->GetSceneModule()->GetScene()->GetRenderPass()->SetReservedGPUTexture(
+                    shadowGPUIndex, ReservedGPUState::FREE
+                );
+            }
             CreateStaticShadowMap();
         }
         else
@@ -302,17 +316,14 @@ void SpotLightComponent::CreateStaticShadowMap()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    shadowGPUIndex = glGetTextureHandleARB(staticSpotShadowMap);
-    glMakeTextureHandleResidentARB(shadowGPUIndex);
+    staticSpotShadowMapGPU = glGetTextureHandleARB(staticSpotShadowMap);
+    glMakeTextureHandleResidentARB(staticSpotShadowMapGPU);
 }
 
 void SpotLightComponent::DeleteStaticShadowMap()
 {
-    glMakeTextureHandleNonResidentARB(shadowGPUIndex);
-    glDeleteTextures(1, &staticSpotShadowMap);
-
     // FREE INDEX FROM RENDER PASS
-    if (shadowGPUIndex > 0)
+    if (shadowGPUIndex > -1)
     {
         App->GetSceneModule()->GetScene()->GetRenderPass()->SetReservedGPUTexture(
             shadowGPUIndex, ReservedGPUState::FREE
@@ -320,6 +331,29 @@ void SpotLightComponent::DeleteStaticShadowMap()
 
         App->GetSceneModule()->GetScene()->GetRenderPass()->ReplaceShadowGPUTexture(shadowGPUIndex, arrayGPUStored);
     }
+
+    glMakeTextureHandleNonResidentARB(staticSpotShadowMapGPU);
+    glDeleteTextures(1, &staticSpotShadowMap);
+}
+
+void SpotLightComponent::SetVolumetricRendered(bool hasRendered)
+{
+    if (!hasRendered && isStaticVolumetric && staticRendered)
+    {
+        staticRendered = hasRendered;
+
+        // FREE INDEX FROM RENDER PASS
+        if (shadowGPUIndex > -1)
+        {
+            App->GetSceneModule()->GetScene()->GetRenderPass()->SetReservedGPUTexture(
+                shadowGPUIndex, ReservedGPUState::FREE
+            );
+
+            App->GetSceneModule()->GetScene()->GetRenderPass()->ReplaceShadowGPUTexture(shadowGPUIndex, arrayGPUStored);
+        }
+    }
+
+    staticRendered = hasRendered;
 }
 
 void SpotLightComponent::UpdateLocalAABB()
