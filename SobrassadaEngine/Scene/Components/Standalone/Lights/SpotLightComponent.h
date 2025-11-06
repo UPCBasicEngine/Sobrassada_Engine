@@ -43,6 +43,7 @@ class SpotLightComponent : public LightComponent
 
     const std::vector<GameObject*>& GetStaticObjects() const { return staticObjects; }
     void SetStaticObjects(const std::vector<GameObject*>& objects) { staticObjects = objects; }
+    void ClearStaticObjects() { staticObjects.clear(); }
 
   private:
     void UpdateLocalAABB();

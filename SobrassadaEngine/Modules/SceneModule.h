@@ -51,6 +51,8 @@ class SOBRASADA_API_ENGINE SceneModule : public Module
 
     bool IsAsyncSceneLoaded() const { return asyncLoadingThread.valid(); }
 
+    void ResetSpotlightStaticObjects();
+
   private:
     void HandleRaycast(const KeyState* mouseButtons, const KeyState* keyboard);
     void HandleObjectDuplication();

@@ -1096,6 +1096,11 @@ void Scene::UpdateAllMaterialInstances(const UID materialUID)
     }
 }
 
+void Scene::SetResetStaticObjects()
+{
+    if (lightsConfig) lightsConfig->ResetSpotStaticObjects();
+}
+
 void Scene::CreateStaticSpatialDataStruct()
 {
     // PARAMETRIZED IN FUTURE

@@ -125,6 +125,7 @@ class LightsConfig
     void IsHDRTexture(const std::string& name);
 
     void ResetSpotShadowIndexes();
+    void ResetSpotStaticObjects();
 
     DirectionalLightComponent* GetDirectionalLight() { return directionalLight; }
 

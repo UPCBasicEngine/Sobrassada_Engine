@@ -127,6 +127,14 @@ void LightsConfig::ResetSpotShadowIndexes()
     }
 }
 
+void LightsConfig::ResetSpotStaticObjects()
+{
+    for (SpotLightComponent* spot : spotLights)
+    {
+        spot->ClearStaticObjects();
+    }
+}
+
 void LightsConfig::RenderSkybox(const float4x4& projection, const float4x4& view) const
 {
     App->GetOpenGLModule()->SetDepthFunc(false);
