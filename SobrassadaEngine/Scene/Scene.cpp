@@ -1634,13 +1634,13 @@ void Scene::LoadPrefab(
         newObjects[0]->UpdateTransformForGOBranch();
 
         // ADD DYNAMICS TO TREE
-        for (int i = 0; i < newObjects.size(); ++i)
+        /*for (int i = 0; i < newObjects.size(); ++i)
         {
             AABB globalAABB = newObjects[i]->GetGlobalAABB();
             if (!newObjects[i]->IsStatic() && !globalAABB.IsDegenerate() && globalAABB.IsFinite() &&
                 !globalAABB.Size().IsZero())
                 dynamicOctree->InsertElement(newObjects[i]);
-        }
+        }*/
 
         // Get all scene lights, because if the prefab has lights when creating them they won't be added to the
         // scene, as the gameObject is still not part of the scene
