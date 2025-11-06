@@ -53,7 +53,7 @@ void MirageBossDash::HandleState(float deltaTime)
     switch (currentState)
     {
     case BossDashStates::Idle:
-        Idle();
+        Idle(deltaTime);
         break;
 
     case BossDashStates::OverheadStrike:
@@ -62,7 +62,7 @@ void MirageBossDash::HandleState(float deltaTime)
     }
 }
 
-void MirageBossDash::Idle()
+void MirageBossDash::Idle(float deltaTime)
 {
     if (stateEnter)
     {
@@ -70,6 +70,8 @@ void MirageBossDash::Idle()
         stateEnter    = false;
         currentAction = BossDashActions::Idle;
         doIdle        = false;
+
+        
 
         if (animComponent) animComponent->UseTrigger("Idle");
     }
@@ -91,6 +93,8 @@ void MirageBossDash::OverheadStrike(float deltaTime)
         {
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Prepare");
+
+            Attack(deltaTime);
         }
         if (animComponent && animComponent->IsFinished())
         {
@@ -105,7 +109,6 @@ void MirageBossDash::OverheadStrike(float deltaTime)
             actionTriggerDone = true;
             if (animComponent) animComponent->UseTrigger("Dash");
             StartDash();
-            Attack(deltaTime);
         }
 
         if (isDashing) Dash(deltaTime);

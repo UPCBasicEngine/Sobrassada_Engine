@@ -1266,8 +1266,8 @@ void RenderPass::VolumetricFogPassRender(CameraComponent* camera, DirectionalLig
     // glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, visibleVolumetricAreaIndicesSSBO);
 
     // Local size of compute is (16,16,1)
-    unsigned int numGroupsX = (width / 2 + (8 - 1)) / 8;
-    unsigned int numGroupsY = (height / 2 + (8 - 1)) / 8;
+    unsigned int numGroupsX = (width / 2 + 15) / 16;
+    unsigned int numGroupsY = (height / 2 + 15) / 16;
 
     float3 cameraPosition;
     float4x4 projection, inverseView;

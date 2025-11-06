@@ -844,7 +844,8 @@ void DebugDrawModule::HandleDebugRenderOptions()
 
     if (debugOptionValues[(int)DebugOptions::RENDER_DYNAMICTREE])
     {
-        DynamicOctree* dynamicTree = sceneModule->GetScene()->GetDynamicOctree();
+        //DynamicOctree* dynamicTree = sceneModule->GetScene()->GetDynamicOctree();
+        Octree* dynamicTree = sceneModule->GetScene()->GetOctree();
         if (dynamicTree != nullptr) RenderLines(dynamicTree->GetDrawLines(), float3(0.467f, 0.647f, 0.91f));
     }
 

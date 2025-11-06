@@ -121,7 +121,7 @@ class SOBRASADA_API_ENGINE Scene
 
     Octree* GetOctree() const { return sceneOctree; }
     Octree* GetDynamicTree() const { return dynamicTree; }
-    DynamicOctree* GetDynamicOctree() const { return dynamicOctree; }
+    //DynamicOctree* GetDynamicOctree() const { return dynamicOctree; }
 
     UID GetMultiselectUID() const;
     GameObject* GetMultiselectParent() const { return multiSelectParent; }
@@ -165,9 +165,9 @@ class SOBRASADA_API_ENGINE Scene
 
     bool isSceneLoaded = false;
 
-    void AddTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.insert(gameObject); };
-    void RemoveTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.erase(gameObject); };
-    void ClearTransformTransformUpdatedGameObjects() { transformUpdatedGameObjects.clear(); };
+    //void AddTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.insert(gameObject); };
+    //void RemoveTransformUpdatedGameObject(GameObject* gameObject) { transformUpdatedGameObjects.erase(gameObject); };
+    //void ClearTransformTransformUpdatedGameObjects() { transformUpdatedGameObjects.clear(); };
 
     void SetResetStaticObjects();
 
