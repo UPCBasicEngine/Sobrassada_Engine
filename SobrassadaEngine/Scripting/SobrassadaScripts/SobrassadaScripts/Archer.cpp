@@ -756,88 +756,64 @@ void Archer::OnPlayerEnterLocation()
 
 void Archer::PlayHighlightSequence()
 {
-    if (!triggered)
+    if (currentState == ArcherStates::PATROL)
     {
-        if (currentState == ArcherStates::PATROL)
-        {
-            //GLOG("Starting highlight sequence");
-            currentState             = ArcherStates::HIGHLIGHTING;
-            currentHighlightingState = ArcherHighlightingStates::IDLE;
-        }
+        GLOG("Starting highlight sequence");
+        currentState             = ArcherStates::HIGHLIGHTING;
+        currentHighlightingState = ArcherHighlightingStates::IDLE;
+        highlightTimer           = 0.0f;
+        if (animComponent) animComponent->UseTrigger("idle");
     }
   
 }
 
 void Archer::UpdateHighlightState(float deltaTime)
 {
-    static float currentStateTime  = 0.0f;
-    currentStateTime              += deltaTime;
-  
+    highlightTimer += deltaTime;
 
-    if (!triggered)
+    switch (currentHighlightingState)
     {
-        switch (currentHighlightingState)
+    case ArcherHighlightingStates::IDLE:
+        if (highlightTimer >= 1.0f)
         {
-        case ArcherHighlightingStates::IDLE:
-
-            if (currentStateTime < 0.1f)
-            {
-                animComponent->UseTrigger("idle");
-            }
-
-            else if (currentStateTime > 1.0f)
-            {
-                currentHighlightingState = ArcherHighlightingStates::AIM;
-                currentStateTime         = 0.0f;
-            }
-            break;
-
-        case ArcherHighlightingStates::AIM:
-
-            if (currentStateTime < 0.1f)
-            {
-                animComponent->UseTrigger("aim");
-            }
-            else if (currentStateTime > 3.0f)
-            {
-                currentHighlightingState = ArcherHighlightingStates::BASIC_ATTACK;
-                currentStateTime         = 0.0f;
-            }
-            break;
-
-        case ArcherHighlightingStates::BASIC_ATTACK:
-
-            if (currentStateTime < 0.1f)
-            {
-                //GLOG("ENTER ATTACK STATE");
-                animComponent->UseTrigger("attack");
-            }
-            else if (currentStateTime > 1.0f)
-            {
-                currentHighlightingState = ArcherHighlightingStates::COOLDOWN;
-                currentStateTime         = 0.0f;
-            }
-            break;
-
-        case ArcherHighlightingStates::COOLDOWN:
-            if (currentStateTime > highlightDuration)
-            {
-                currentHighlightingState = ArcherHighlightingStates::DONE;
-                currentStateTime         = 0.0f;
-            }
-            break;
-
-        case ArcherHighlightingStates::DONE:
-            //GLOG("ENTER DONE STATE");
-            animComponent->UseTrigger("idle");
-            currentHighlightingState = ArcherHighlightingStates::IDLE;
-            currentState             = ArcherStates::PATROL;
-            currentStateTime         = 0.0f;
-            Archer::triggered        = true;
-            break;
+            currentHighlightingState = ArcherHighlightingStates::AIM;
+            highlightTimer           = 0.0f;
+            if (animComponent) animComponent->UseTrigger("aim"); 
         }
-    }
+        break;
 
+    case ArcherHighlightingStates::AIM:
+        if (highlightTimer >= 3.0f)
+        {
+            currentHighlightingState = ArcherHighlightingStates::BASIC_ATTACK;
+            highlightTimer           = 0.0f;
+            if (animComponent) animComponent->UseTrigger("attack");
+        }
+        break;
+
+    case ArcherHighlightingStates::BASIC_ATTACK:
+        if (highlightTimer >= 1.0f)
+        {
+            currentHighlightingState = ArcherHighlightingStates::COOLDOWN;
+            highlightTimer           = 0.0f;
+        }
+        break;
+
+    case ArcherHighlightingStates::COOLDOWN:
+        if (highlightTimer >= highlightDuration)
+        {
+            currentHighlightingState = ArcherHighlightingStates::DONE;
+            highlightTimer           = 0.0f;
+        }
+        break;
+
+    case ArcherHighlightingStates::DONE:
+        if (animComponent) animComponent->UseTrigger("idle");
+        currentHighlightingState = ArcherHighlightingStates::IDLE;
+        currentState             = ArcherStates::PATROL;
+        highlightTimer           = 0.0f;
+        break;
+    }
     
 }
 
@@ -1096,31 +1072,6 @@ void Archer::PatrolAI()
     {
         float distance = GetDistanceFromPlayer();
 
-        if (isStatic)
-        {
-            if (distance <= maxDetectionRange && currentState == ArcherStates::PATROL)
-            {
-                if (currentHighlightingState == ArcherHighlightingStates::IDLE)
-                {
-                    //GLOG("STATIC PATROL -> HIGHLIGHTING: Player detected at distance %.2f", distance);
-                    PlayHighlightSequence();
-                    return;
-                }
-            }
-        }
-        else
-        {
-            if (distance <= maxDetectionRange && distance > rangeAIChase && currentState == ArcherStates::PATROL)
-            {
-                if (currentHighlightingState == ArcherHighlightingStates::IDLE)
-                {
-                    //GLOG("MOBILE PATROL -> HIGHLIGHTING: Player detected at distance %.2f", distance);
-                    PlayHighlightSequence();
-                    return;
-                }
-            }
-        }
-
         if (currentState == ArcherStates::PATROL)
         {
             if (!isStatic)
@@ -1206,11 +1157,6 @@ void Archer::ChaseAI()
         agentAI->SetSpeed(5.0, 10.0f);
         agentAI->SetLookForward(true);
 
-        if (distance <= rangeEscape)
-        {
-            currentState = ArcherStates::ESCAPE;
-            return;
-        }
 
         const float AIM_THRESHOLD = rangeAIAttack - 0.5f;
         if (distance <= AIM_THRESHOLD && attackCdTimer <= 0.0f)
@@ -1464,14 +1410,14 @@ void Archer::Aim(float deltaTime)
 
     bool hasLOS = CheckLineOfSight();
 
-    if (!hasLOS)
+   /* if (!hasLOS)
     {
         //GLOG("AIM -> CHASE", hasLOS ? "YES" : "NO");
         isAiming     = false;
         aimTimer     = 0.0f;
-        currentState = ArcherStates::CHASE;
+        ChangeState();
         return;
-    }
+    }*/
 
     if (!isAiming)
     {
@@ -1518,7 +1464,7 @@ void Archer::PreAim(float deltaTime)
         isPreAiming = true;
         preAimTimer = 0.0f;
 
-        if (animComponent) animComponent->UseTrigger("aim");
+        //if (animComponent) animComponent->UseTrigger("aim");
 
         if (agentAI && character)
         {
