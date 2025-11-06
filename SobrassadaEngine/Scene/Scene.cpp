@@ -284,8 +284,8 @@ void Scene::Init()
     toUpdateGameObjects.reserve(gameObjectsContainer.size());
 
     UpdateStaticSpatialStructure();
-    //UpdateDynamicSpatialStructure();
-    CreateDynamicOctree();
+    UpdateDynamicSpatialStructure();
+    // CreateDynamicOctree();
 
     isSceneLoaded = true;
 }
@@ -794,7 +794,7 @@ void Scene::RemoveGameObjectHierarchy(UID gameObjectUID)
         {
             SetDynamicModified();
 
-            dynamicOctree->RemoveElement(gameObject, false);
+            //dynamicOctree->RemoveElement(gameObject, false);
         }
 
         if (gameObject == nullptr) continue;
@@ -1180,8 +1180,9 @@ void Scene::UpdateDynamicOctree()
     transformUpdatedGameObjects.clear();
 }
 
-
-void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes, bool includeStatics) const
+void Scene::CheckObjectsInFrustum(
+    std::vector<GameObject*>& outRenderGameObjects, FrustumPlanes frustumPlanes, bool includeStatics
+) const
 {
 #ifdef OPTICK
     OPTICK_CATEGORY("Scene::CheckObjectsInFrustum", Optick::Category::GameLogic)
@@ -1190,9 +1191,9 @@ void Scene::CheckObjectsInFrustum(std::vector<GameObject*>& outRenderGameObjects
 
     if (includeStatics) sceneOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
-    //dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+     dynamicTree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
-    dynamicOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
+    //dynamicOctree->QueryElements<FrustumPlanes>(frustumPlanes, queriedObjects);
 
     for (auto gameObject : queriedObjects)
     {
