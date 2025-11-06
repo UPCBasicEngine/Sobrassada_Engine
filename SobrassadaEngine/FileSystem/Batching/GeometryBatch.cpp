@@ -198,7 +198,7 @@ void GeometryBatch::LoadData()
     modelsSize              = totalModels.size() * sizeof(float4x4);
     deltaWindDirectionsSize = totalModels.size() * sizeof(float4);
 
-    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT; // const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT; 
+    const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT; // const GLbitfield flags  = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT; 
     for (int i = 0; i < 2; i++)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, models[i]);
@@ -370,7 +370,7 @@ void GeometryBatch::UpdateBuffers(const std::vector<MeshComponent*>& meshesToRen
     updatedOnce               = true;
 
     const int nextBufferIndex = (currentBufferIndex + 1) % 2;
-    const int readBufferIndex  = (currentBufferIndex + 2) % 2;
+    const int readBufferIndex  = (currentBufferIndex + 1) % 2;
 
     if (hasBones)
     {
