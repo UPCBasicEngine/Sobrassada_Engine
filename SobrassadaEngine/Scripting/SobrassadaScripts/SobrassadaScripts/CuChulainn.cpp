@@ -2651,14 +2651,19 @@ void CuChulainn::EnableRiastradVfx()
 
 void CuChulainn::AddRiastrad(int amount)
 {
+    bool playSound = true;
     riastradMeter += amount;
-    if (riastradMeter > 100) riastradMeter = 100;
+    if (riastradMeter > 100)
+    {
+        riastradMeter = 100;
+        playSound = false;
+    }
     if (riastradMeter < 0) riastradMeter = 0;
 
     if (riastradMeter == 100)
     {
         if (riastradEye) riastradEye->SetFillAmount(riastradMeter / 100.0f);
-        if (audio) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_RIASTRADCHARGED);
+        if (audio && playSound) audio->EmitEvent(AK::EVENTS::PLAY_SFX_MC_RIASTRADCHARGED);
 
         if (AppEngine->GetInputModule()->IsUsingKeyboard() && riastradKey) riastradKey->SetEnabled(true);
         else if (riastradTriggers) riastradTriggers->SetEnabled(true);
@@ -2781,7 +2786,7 @@ void CuChulainn::ApplySavedState(const PlayerState& playerState)
     if (damageMask) damageMask->SetLife(static_cast<float>(currentHealth));
 
     riastradMeter = 0;
-    AddRiastrad(playerState.riastrad);
+    AddRiastrad(playerState.riastrad == 100 ? 101 : playerState.riastrad);
 
     mushrooms = playerState.mushrooms;
 
