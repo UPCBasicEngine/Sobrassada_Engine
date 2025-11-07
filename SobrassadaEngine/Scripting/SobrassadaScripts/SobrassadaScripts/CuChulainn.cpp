@@ -1228,6 +1228,7 @@ void CuChulainn::GetInputs()
         // TODO: This should be SetPosition, Respawn is here to test
         // SetPosition(spawnPos);
         Respawn();
+        ResetState();
     }
     if (keyboard[SDL_SCANCODE_F6] == KEY_DOWN)
     {
